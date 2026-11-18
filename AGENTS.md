@@ -79,6 +79,11 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - When a branch is ready and its tests pass, a merge agent merges it without asking the user (user instruction 2026-11-18).
 - Section 11 is intentionally unused on this branch; it may be reserved by another in-flight branch.
 
+## 13. Polling over sleep
+
+- Agents (and the coordinator) should prefer polling (check a condition in a loop, or use await-style tools) over `sleep` commands.
+- Use `sleep` only when absolutely necessary.
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -100,3 +105,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: deploy (Dockerfile, compose, Redis config, CI) branch merged-ready.
 - 2026-11-18: harden (final integration: Redis wiring, full middleware stack, integration + CSP tests) merged-ready.
 - 2026-11-18: Rule added (section 12): when a branch is ready and tests pass, a merge agent merges it without asking the user.
+- 2026-11-18: Rule added (section 13): prefer polling over sleep.
