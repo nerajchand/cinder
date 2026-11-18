@@ -73,6 +73,12 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - Mapping: T0=scaffold, T1=store, T2=api, T3=middleware, T4=web, T5=deploy, T6=tests, T7=harden (final integration and hardening).
 - Branch and worktree names follow the same names, e.g. `feat/scaffold`, `feat/store`, `feat/api`.
 
+## 12. Merge policy
+
+- Agents prepare branches.
+- When a branch is ready and its tests pass, a merge agent merges it without asking the user (user instruction 2026-11-18).
+- Section 11 is intentionally unused on this branch; it may be reserved by another in-flight branch.
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -87,3 +93,10 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Rule added: thinking level by task type (planning/research high, features medium, simple tasks/mockups low).
 - 2026-11-18: T0 scaffold built on feat/scaffold, pending user merge.
 - 2026-11-18: Task IDs T0-T7 replaced by short names: scaffold, store, api, middleware, web, deploy, tests, harden.
+- 2026-11-18: store (memory + Redis) branch merged-ready.
+- 2026-11-18: middleware (security headers, rate limit, body limit, logging, origin) branch merged-ready.
+- 2026-11-18: api (create/status/consume/healthz) branch merged-ready.
+- 2026-11-18: web (embedded static frontend) branch merged-ready.
+- 2026-11-18: deploy (Dockerfile, compose, Redis config, CI) branch merged-ready.
+- 2026-11-18: harden (final integration: Redis wiring, full middleware stack, integration + CSP tests) merged-ready.
+- 2026-11-18: Rule added (section 12): when a branch is ready and tests pass, a merge agent merges it without asking the user.
