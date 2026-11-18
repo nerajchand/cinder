@@ -64,7 +64,7 @@ func TestCSPCompatibility(t *testing.T) {
 		t.Fatal("no /static assets referenced by pages")
 	}
 	// Also pull in assets the scripts import by name.
-	for _, a := range []string{"/static/api.js", "/static/crypto.js", "/static/dom.js", "/static/render.js", "/static/vendor/qrcode.js", "/static/style.css", "/static/favicon.svg"} {
+	for _, a := range []string{"/static/api.js", "/static/crypto.js", "/static/dom.js", "/static/render.js", "/static/vendor/qrcode.js", "/static/style.css", "/static/logo.svg"} {
 		assets[a] = true
 	}
 
