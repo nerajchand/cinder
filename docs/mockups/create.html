@@ -20,12 +20,36 @@
 <main id="main">
 <section class="card" aria-labelledby="h">
 <h1 id="h">Share a secret, once.</h1>
-<p class="lead">Paste a password, key or note. You get a link that works one time, then burns.</p>
+<p class="lead">Paste a password, key, snippet or note. You get a link that works one time, then burns.</p>
 <form action="link-created.html" method="get">
   <div class="group">
-    <label for="secret-input">Your secret</label>
-    <textarea id="secret-input" name="secret" required spellcheck="false" autocomplete="off" aria-describedby="counter hint-secret" maxlength="65536" placeholder="Paste a password, API key, or note"></textarea>
-    <div class="row"><span class="hint" id="hint-secret" style="margin:0">Plain text only. Maximum 64 KiB.</span><span class="counter" id="counter" aria-live="polite">0 / 65,536 bytes (64 KiB)</span></div>
+    <span class="label" id="sec-lbl">Your secret</span>
+    <div class="editor">
+      <div class="editor-bar">
+        <div class="tabs" role="tablist" aria-label="Editor mode">
+          <button type="button" class="tab" role="tab" id="tab-write" aria-selected="true" aria-controls="panel-write">Write</button>
+          <button type="button" class="tab" role="tab" id="tab-preview" aria-selected="false" aria-controls="panel-preview" tabindex="-1">Preview</button>
+        </div>
+        <div class="lang">
+          <label for="lang">Language</label>
+          <select id="lang" name="lang">
+            <option>Plain text</option><option selected>Markdown</option><option>JSON</option><option>YAML</option><option>Bash</option><option>Go</option><option>Python</option><option>JavaScript</option><option>TypeScript</option><option>SQL</option><option>HTML</option><option>XML</option><option>TOML</option><option>Dockerfile</option>
+          </select>
+        </div>
+      </div>
+      <div id="panel-write" role="tabpanel" aria-labelledby="tab-write">
+        <textarea id="secret-input" name="secret" required spellcheck="false" autocomplete="off" aria-labelledby="sec-lbl" aria-describedby="counter hint-secret" maxlength="65536" placeholder="Paste or type a secret. Markdown is supported: # headings, lists, and fenced code blocks."></textarea>
+      </div>
+      <div id="panel-preview" class="preview md" role="tabpanel" aria-labelledby="tab-preview" tabindex="0" hidden>
+        <p class="hint" style="margin:0 0 8px">Preview (static sample in this mockup)</p>
+        <h3>Production database</h3>
+        <p>Use these credentials for the <strong>read-only</strong> replica:</p>
+        <ul><li>Host: <code>db.internal.example</code></li><li>User: <code>report_ro</code></li></ul>
+        <pre><code><span class="tk-c"># connect</span>
+<span class="tk-k">psql</span> <span class="tk-s">"postgres://report_ro:s3cr3t@db.internal.example/app"</span></code></pre>
+      </div>
+    </div>
+    <div class="row"><span class="hint" id="hint-secret" style="margin:0">Markdown and code supported. Preview is rendered safely in your browser. Maximum 64 KiB.</span><span class="counter" id="counter" aria-live="polite">0 / 65,536 bytes (64 KiB)</span></div>
   </div>
   <div class="group">
     <label for="ttl">Expires after</label>

@@ -25,15 +25,34 @@
     };
     ta.addEventListener('input', upd); upd();
   }
+  var tabs = document.querySelectorAll('[role=tab]');
+  tabs.forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      tabs.forEach(function (o) {
+        var on = o === tab;
+        o.setAttribute('aria-selected', String(on));
+        o.tabIndex = on ? 0 : -1;
+        document.getElementById(o.getAttribute('aria-controls')).hidden = !on;
+      });
+    });
+    tab.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var list = Array.prototype.slice.call(tabs);
+      var n = list[(list.indexOf(tab) + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length];
+      n.focus(); n.click();
+    });
+  });
+  var lang = document.getElementById('lang');
+  var lb = document.getElementById('lang-badge');
+  if (lang && lb) lang.addEventListener('change', function () { lb.textContent = lang.options[lang.selectedIndex].text; });
   var tog = document.querySelector('[data-toggle-secret]');
   if (tog) {
-    var box = document.getElementById('secret-value');
-    var real = box.getAttribute('data-real'), mask = '\u2022'.repeat(24);
+    var mask = document.getElementById('secret-mask'), real = document.getElementById('secret-rendered');
     tog.addEventListener('click', function () {
       var shown = tog.getAttribute('aria-pressed') === 'true';
       tog.setAttribute('aria-pressed', String(!shown));
       tog.textContent = shown ? 'Show' : 'Hide';
-      box.textContent = shown ? mask : real;
+      mask.hidden = !shown; real.hidden = shown;
     });
   }
   document.querySelectorAll('[data-copy]').forEach(function (b) {

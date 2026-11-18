@@ -48,6 +48,7 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 64 KiB size limit.
 - Plain JS frontend with no build step.
 - Dark mode is the default theme.
+- Secrets may contain markdown with a selectable code language; the link page shows a QR code.
 
 ## Changelog
 
@@ -57,3 +58,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Design decisions recorded (Go, self-hosted, Redis, no passphrase in MVP, tombstones, 7-day max TTL, no creator notification).
 - 2026-11-18: Rule added: always ask the user questions via the structured ask tool. Design docs merged to main. MVP decisions: server-assigned IDs (no AAD), no revoke in MVP, 64 KiB size limit, plain JS frontend with no build step.
 - 2026-11-18: UI mockups on branch docs/ui-mockups; dark mode is the default theme.
+- 2026-11-18: mockups revised after user review: markdown/code-language input, QR code on link page, smaller tombstone image

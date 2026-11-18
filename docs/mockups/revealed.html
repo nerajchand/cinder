@@ -23,8 +23,15 @@
 <p class="lead">It has been destroyed on the server. This is the only copy you will see.</p>
 <div class="alert warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Copy it now. Closing or reloading this page loses the secret.</strong>It cannot be shown again, not even with the same link.</div></div>
 <div class="group">
-  <span class="label" id="sec-label">Secret (hidden by default)</span>
-  <div class="secret" id="secret-value" role="region" aria-labelledby="sec-label" tabindex="0" data-real="correct-horse-battery-staple-9F2k!">••••••••••••••••••••••••</div>
+  <div class="rendered-head"><span class="label" id="sec-label" style="margin:0">Secret (hidden by default)</span><span class="badge" id="lang-badge" title="Language chosen by the sender">Markdown</span></div>
+  <div class="rendered" id="secret-mask" tabindex="0" aria-labelledby="sec-label" style="font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all">••••••••••••••••••••••••</div>
+  <div class="rendered md" id="secret-rendered" tabindex="0" aria-labelledby="sec-label" hidden>
+    <h3>Production database</h3>
+    <p>Use these credentials for the <strong>read-only</strong> replica:</p>
+    <ul><li>Host: <code>db.internal.example</code></li><li>User: <code>report_ro</code></li></ul>
+    <pre><code><span class="tk-c"># connect</span>
+<span class="tk-k">psql</span> <span class="tk-s">"postgres://report_ro:s3cr3t@db.internal.example/app"</span></code></pre>
+  </div>
   <div class="btn-row">
     <button class="btn secondary" type="button" data-toggle-secret aria-pressed="false">Show</button>
     <button class="btn" type="button" data-copy>Copy secret</button>
