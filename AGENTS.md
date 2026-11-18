@@ -54,6 +54,7 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - Markdown parser, syntax highlighter and QR generator are vendored static files: no CDN, no inline styles.
 - QR is generated client-side only (never a third-party service) and hidden behind a Show QR button by default.
 - Buttons on the create and reveal screens are smaller.
+- Logo: padlock with glowing ember outline and keyhole flame (docs/logo.svg)
 
 ## 9. Recording decisions
 
@@ -110,3 +111,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Logo mockups on branch docs/logo-mockups
 - 2026-11-18: Padlock-flame logo variants added
 - 2026-11-18: README rewritten (docs/readme branch): features, flow diagram, config table, security model, testing, layout.
+- 2026-11-18: Logo 09-padlock-ember-flame chosen; added to top of README

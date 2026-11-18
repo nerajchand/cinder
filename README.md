@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/logo.svg" alt="Cinder logo" width="160"></p>
+
 # Cinder
 
 Cinder is a self-hosted, **burn-on-read** secret sharing tool. Paste a secret, get a link, send it. The first person to open the link and click **Reveal** sees the secret once; after that it is gone.
