@@ -50,7 +50,20 @@ sequenceDiagram
 docker compose up --build
 ```
 
-Open <http://localhost:8080> (set `CINDER_HOST_PORT` to use another host port). Compose starts Cinder and Redis 7. The Cinder port is published on `127.0.0.1` only. Redis is not published and has no data volume; its config is mounted from `deploy/redis.conf`.
+Open <http://localhost:8080>. Compose starts Cinder and Redis 7. The Cinder port is published on `127.0.0.1` only; set `CINDER_HOST_PORT` to use another host port (default 8080), e.g. `CINDER_HOST_PORT=9090 docker compose up --build`. Redis is not published (`expose` only, no `ports`) and has no data volume; its config is mounted read-only from `deploy/redis.conf`. Cinder waits for Redis to be healthy before it starts.
+
+**Redis bind note.** `deploy/redis.conf` sets `bind * -::*` and `protected-mode no` so the Cinder container can reach Redis over the private Compose network. That is only safe because Redis is never published and has no password. Do not reuse this file for a host-reachable Redis; bind to a private interface and set `requirepass` instead.
+
+Makefile shortcuts:
+
+```sh
+make docker-build   # docker build -t cinder .   (IMAGE=name to override the tag)
+make docker-run     # single container, in-memory store, -p 8080:8080
+make docker-up      # docker compose up -d --build
+make docker-down    # docker compose down -v
+make docker-logs    # docker compose logs -f
+make docker-ps      # docker compose ps
+```
 
 Plain HTTP works on `localhost` only. Anywhere else you need HTTPS (WebCrypto requires a secure context); see [Deployment](#deployment).
 
@@ -58,8 +71,8 @@ Plain HTTP works on `localhost` only. Anywhere else you need HTTPS (WebCrypto re
 
 Requirements:
 
-- **Go**: the version in `go.mod` (currently `go 1.26.0`).
-- **Node 22+**, only for the frontend unit tests (no npm dependencies, no build step).
+- **Go**: the version in `go.mod` (currently `go 1.26.0`); the Dockerfile builds with `golang:1.26`.
+- **Node 22+**, for the frontend unit tests. The CLI (`scripts/cinder-cli.mjs`) needs Node 18+. No npm dependencies, no build step.
 - **Redis 6.2+**, optional for local development.
 
 ```sh
@@ -96,8 +109,9 @@ All settings are environment variables. Invalid values make the process exit wit
 | `CINDER_RATE_LIMIT_STATUS_PER_MIN` | `120` | Per-IP status checks per minute; `0` disables. |
 | `CINDER_RATE_LIMIT_BURST` | `10` | Token bucket burst size (minimum 1). |
 
-Numeric rate-limit values must be at most 1000000.
+`CINDER_HOST_PORT` is not read by Cinder; it is a Docker Compose variable for the published host port (see Quick start).
 
+Numeric rate-limit values must be at most 1000000.
 ## Using the API with curl
 
 The server is zero-knowledge, so **encryption happens on your side**. Two ways to use it from a shell:
@@ -188,24 +202,30 @@ Cinder serves plain HTTP. **Terminate TLS in a reverse proxy** (Caddy and nginx 
 - Limit request bodies (about 128k with the default ciphertext limit, since base64 inflates it by about 4/3), not cache responses, and not log request URLs if avoidable.
 - Not retry `consume` requests automatically.
 
-Redis: never expose it publicly, keep persistence off, and do not back it up. Health: probe `GET /healthz` from outside; the runtime image is distroless (no shell, curl or wget), so the container healthcheck runs the `cinder healthcheck` subcommand, which Compose uses for both Cinder and Redis. The container runs as non-root with a read-only filesystem and all capabilities dropped.
+Redis: never expose it publicly, keep persistence off, and do not back it up.
+
+Health: `GET /healthz` returns 200 when Redis answers `PING`. The runtime image is distroless (no shell, curl or wget), so the binary has a built-in probe: `cinder healthcheck` GETs `http://127.0.0.1:<port>/healthz` (port from `CINDER_ADDR`) and exits non-zero unless it gets 200. It backs both the Dockerfile `HEALTHCHECK` and the Compose healthcheck for Cinder; the Redis service uses `redis-cli ping`.
+
+Container hardening (Cinder service in `docker-compose.yml` and `Dockerfile`): distroless `static-debian12:nonroot` base, runs as `nonroot`, `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`. The Redis service is not hardened this way; it relies on being unpublished and on the private Compose network.
 
 ## Testing
 
 ```sh
 go test ./...                 # unit and integration tests (memory store)
-node --test                   # frontend tests (Node 22+), run from the repo root
+node --test web/test/*.test.mjs   # frontend and CLI interop tests (Node 22+), from the repo root
 CINDER_TEST_REDIS_URL=redis://localhost:6379/0 go test ./...   # also exercise real Redis
 ```
 
 - Without `CINDER_TEST_REDIS_URL`, the Redis integration tests in `test/integration` are skipped; the store tests in `internal/store` skip if no Redis is found on `127.0.0.1:6379`.
 - Real-browser behaviour (clipboard, canvas QR, theme toggle, CSP enforcement in a browser) is not covered by automated tests.
+- The CLI round-trip test in `test/integration/cli_test.go` runs under `go test` and is skipped if `node` is not installed. `web/test/cli-interop.test.mjs` checks browser/CLI compatibility.
 - CI (`.github/workflows/ci.yml`) runs `go vet ./...` and `go test ./...`. It does not run the Node tests or a Redis service.
 
 ## Project layout
 
 ```
-cmd/cinder/          entrypoint, store selection, Redis wiring
+cmd/cinder/          entrypoint, store selection, Redis wiring, `healthcheck` subcommand
+scripts/cinder-cli.mjs  Node CLI to create and fetch secrets (see API section)
 internal/api/        HTTP handlers and error shapes
 internal/app/        handler assembly (middleware stack + routes + web)
 internal/config/     CINDER_* parsing and validation
