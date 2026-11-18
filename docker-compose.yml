@@ -10,7 +10,8 @@ services:
       # CINDER_ALLOWED_ORIGINS: "https://cinder.example.com"
     ports:
       # Plain HTTP on localhost only. Put a TLS reverse proxy in front for real use.
-      - "127.0.0.1:8080:8080"
+      # Override the host port with CINDER_HOST_PORT (default 8080).
+      - "127.0.0.1:${CINDER_HOST_PORT:-8080}:8080"
     depends_on:
       redis:
         condition: service_healthy
@@ -19,8 +20,13 @@ services:
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-    # No in-container healthcheck: the distroless image has no shell, curl or wget.
-    # Probe GET /healthz from outside (proxy, orchestrator or monitoring).
+    # The distroless image has no shell, curl or wget: the binary probes itself.
+    healthcheck:
+      test: ["CMD", "/cinder", "healthcheck"]
+      interval: 10s
+      timeout: 4s
+      start_period: 5s
+      retries: 3
 
   redis:
     image: redis:7

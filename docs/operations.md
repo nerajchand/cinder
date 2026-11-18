@@ -108,7 +108,7 @@ Cinder stores `iv || ciphertext` under `cinder:s:{id}` and tombstones under `cin
 
 ## Health checks
 
-`GET /healthz` returns `200 {"status":"ok"}` when Redis answers `PING`, else `503`. The runtime image is distroless (no shell, curl or wget), so the compose file has no in-container healthcheck for `cinder`; probe `/healthz` from your proxy, orchestrator or monitoring. Redis has a `redis-cli ping` healthcheck and `cinder` waits for it to be healthy.
+`GET /healthz` returns `200 {"status":"ok"}` when Redis answers `PING`, else `503`. The runtime image is distroless (no shell, curl or wget), so the binary has a built-in probe: `cinder healthcheck` GETs `http://127.0.0.1:<port>/healthz` (port taken from `CINDER_ADDR`) and exits non-zero unless it gets 200. It is wired into the Dockerfile `HEALTHCHECK` and the compose `healthcheck`. `cinder` waits for Redis (`redis-cli ping` healthcheck) to be healthy before starting. Set `CINDER_HOST_PORT` to publish on a host port other than 8080. `deploy/redis.conf` binds all interfaces with `protected-mode no` because Redis is only reachable on the private compose network (never published); do not reuse it for a host-reachable Redis.
 
 ## Running without Docker
 

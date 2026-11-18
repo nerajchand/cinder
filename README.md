@@ -50,7 +50,7 @@ sequenceDiagram
 docker compose up --build
 ```
 
-Open <http://localhost:8080>. Compose starts Cinder and Redis 7. The Cinder port is published on `127.0.0.1` only. Redis is not published and has no data volume; its config is mounted from `deploy/redis.conf`.
+Open <http://localhost:8080> (set `CINDER_HOST_PORT` to use another host port). Compose starts Cinder and Redis 7. The Cinder port is published on `127.0.0.1` only. Redis is not published and has no data volume; its config is mounted from `deploy/redis.conf`.
 
 Plain HTTP works on `localhost` only. Anywhere else you need HTTPS (WebCrypto requires a secure context); see [Deployment](#deployment).
 
@@ -142,7 +142,7 @@ Cinder serves plain HTTP. **Terminate TLS in a reverse proxy** (Caddy and nginx 
 - Limit request bodies (about 128k with the default ciphertext limit, since base64 inflates it by about 4/3), not cache responses, and not log request URLs if avoidable.
 - Not retry `consume` requests automatically.
 
-Redis: never expose it publicly, keep persistence off, and do not back it up. Health: probe `GET /healthz` from outside; the runtime image is distroless (no shell, curl or wget), so Compose defines no in-container healthcheck for Cinder. The container runs as non-root with a read-only filesystem and all capabilities dropped.
+Redis: never expose it publicly, keep persistence off, and do not back it up. Health: probe `GET /healthz` from outside; the runtime image is distroless (no shell, curl or wget), so the container healthcheck runs the `cinder healthcheck` subcommand, which Compose uses for both Cinder and Redis. The container runs as non-root with a read-only filesystem and all capabilities dropped.
 
 ## Testing
 
