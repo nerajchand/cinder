@@ -30,6 +30,7 @@ services:
 
   redis:
     image: redis:7
+    command: ["redis-server", "/etc/redis/redis.conf"]
     volumes:
       - ./deploy/redis.conf:/etc/redis/redis.conf:ro
     # Deliberately no data volume (secrets must not outlive the container) and no published ports.
