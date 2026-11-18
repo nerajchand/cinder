@@ -69,3 +69,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: UI mockups on branch docs/ui-mockups; dark mode is the default theme.
 - 2026-11-18: mockups revised after user review: markdown/code-language input, QR code on link page, smaller tombstone image
 - 2026-11-18: Rule added: decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user. Recorded UI/content decisions (markdown envelope, sanitised rendering, vendored deps, client-side QR behind Show QR, dark default, smaller buttons).
+- 2026-11-18: Reveal secret button on interstitial made compact
