@@ -67,6 +67,12 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - Simple tasks and mockups = LOW.
 - The coordinator states the intended effort level in each subagent prompt, because the Task tool has no effort parameter.
 
+## 11. Task naming
+
+- Tasks and agents are referred to by short meaningful names instead of T0-T7.
+- Mapping: T0=scaffold, T1=store, T2=api, T3=middleware, T4=web, T5=deploy, T6=tests, T7=harden (final integration and hardening).
+- Branch and worktree names follow the same names, e.g. `feat/scaffold`, `feat/store`, `feat/api`.
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -80,3 +86,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Reveal secret button on interstitial made compact
 - 2026-11-18: Rule added: thinking level by task type (planning/research high, features medium, simple tasks/mockups low).
 - 2026-11-18: T0 scaffold built on feat/scaffold, pending user merge.
+- 2026-11-18: Task IDs T0-T7 replaced by short names: scaffold, store, api, middleware, web, deploy, tests, harden.
