@@ -7,17 +7,39 @@ Cinder is a planned web tool for sharing secrets on a **burn-on-read** basis: th
 
 ## Contents
 
-1. [Items to verify](#items-to-verify)
-2. [Threat model and goals](#threat-model-and-goals)
-3. [Encryption design](#encryption-design)
-4. [Burn-on-read correctness](#burn-on-read-correctness)
-5. [Expiry, storage and size](#expiry-storage-and-size)
-6. [API and data model](#api-and-data-model)
-7. [UX](#ux)
-8. [Pitfalls and stack options](#pitfalls-and-stack-options)
-9. [Testing and scope](#testing-and-scope)
-10. [Open decisions for the product owner](#open-decisions-for-the-product-owner)
-11. [References to check](#references-to-check)
+1. [Decisions](#decisions)
+2. [Items to verify](#items-to-verify)
+3. [Threat model and goals](#threat-model-and-goals)
+4. [Encryption design](#encryption-design)
+5. [Burn-on-read correctness](#burn-on-read-correctness)
+6. [Expiry, storage and size](#expiry-storage-and-size)
+7. [API and data model](#api-and-data-model)
+8. [UX](#ux)
+9. [Pitfalls and stack options](#pitfalls-and-stack-options)
+10. [Testing and scope](#testing-and-scope)
+11. [Open decisions for the product owner](#open-decisions-for-the-product-owner)
+12. [References to check](#references-to-check)
+
+## Decisions
+
+Recorded by the product owner on 2026-11-18. These supersede the recommendations elsewhere in this document where they differ.
+
+| Area | Decision |
+|---|---|
+| Stack | **Go single binary** with an embedded static frontend (`go:embed`) |
+| Deployment | **Self-hosted first**, shipped as a Docker image or a plain binary |
+| Passphrase | **Not in MVP**, added later |
+| Viewed secrets | **Minimal tombstone** (`id`, `state`, timestamp, no content) kept until the original expiry, so "already viewed" is distinguishable from expired or nonexistent |
+| Creator notification of burn | **None in MVP** |
+| Max TTL | **7 days.** Presets 5 min, 1 h, 1 day, 7 days. Default 24 h |
+| Storage | **Redis.** The product owner chose this over the recommended SQLite |
+
+### Redis implications
+
+- **Persistence:** RDB and AOF should be **off or tightly controlled**, so expired or burned secrets do not linger on disk. If persistence is enabled, document the trade-off, and remember that replicas and backups also hold copies. What lingers is ciphertext only, because encryption is client-side.
+- **Atomic consume:** use `GETDEL` (Redis 6.2 or newer, *[verify]*) for single-view secrets, or a Lua script when `maxViews` is greater than 1 or when the consume must also write the tombstone in the same step. Never GET-then-DEL.
+- **Tombstones:** each tombstone is its own key with a TTL equal to the secret's **original remaining expiry**, so it disappears exactly when the secret would have expired.
+- **Separate service:** Redis runs alongside the Go binary, for example via `docker-compose` with the app and a Redis container. Self-hosters must run and secure Redis (no public exposure, authentication, private network).
 
 ## Items to verify
 
@@ -86,14 +108,16 @@ const iv = crypto.getRandomValues(new Uint8Array(12));
 const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv, additionalData: aad }, key, plaintextBytes);
 ```
 
-### Optional passphrase
+### Optional passphrase (later, not in MVP)
+
+Per the [decisions](#decisions), the passphrase feature is deferred. The notes below are for the later design.
 
 - KDF choices: **Argon2id** is preferred but needs WASM (for example `hash-wasm` or `argon2-browser`). **PBKDF2-HMAC-SHA256** is native, with roughly 600k iterations *[verify OWASP numbers]*. **scrypt** is an alternative.
 - Recommended design: **combine** the random fragment key with a passphrase-derived key, using a per-secret salt.
 - A wrong passphrase shows up as an AES-GCM authentication failure.
 - The server stores **no passphrase hash**.
 - Limitation: someone holding both the DB and the link can brute-force a weak passphrase offline.
-- **MVP: PBKDF2. Defer Argon2id.**
+- **When added: start with PBKDF2, defer Argon2id.**
 
 ### Alternative: server-side encryption
 
@@ -118,7 +142,7 @@ Provide a **non-destructive status check** plus an **atomic consume**. If an unw
 
 ### Atomic read-and-delete
 
-- **Redis:** `GETDEL` (>= 6.2), or a Lua script for N views.
+- **Redis (chosen storage):** `GETDEL` (>= 6.2), or a Lua script for N views and for writing the tombstone atomically.
 - **SQL:** `DELETE ... RETURNING`, or
   `UPDATE secrets SET views_left = views_left - 1 WHERE id = $1 AND views_left > 0 AND expires_at > now() RETURNING ...`
 - **SQLite:** `RETURNING` needs >= 3.35.
@@ -141,13 +165,14 @@ If the response is lost after the burn, the secret is gone. MVP has **no grace w
 
 ## Expiry, storage and size
 
-- **TTL presets:** 5m, 1h, 1d, 7d. Hard maximum 7d. Default 24h.
+- **TTL presets:** 5m, 1h, 1d, 7d. Hard maximum 7d. Default 24h. *(Decided.)*
+- **Tombstones:** after a burn, keep a minimal record (`id`, `state`, timestamp, no content) with a TTL equal to the secret's original expiry.
 - Enforce `expires_at` **in the read query** and also run a cleanup job.
 - **Max views:** default 1, capped around 10.
 
 | Storage | Persistence risk |
 |---|---|
-| Redis | RDB and AOF files, replicas |
+| Redis (chosen) | RDB and AOF files, replicas. Keep persistence off or tightly controlled |
 | SQL | WAL, free pages, backups retain remnants |
 
 - **Secure deletion has limits.** Deleted data may linger in snapshots, WAL, free pages and backups. This is exactly why E2E matters: what lingers is ciphertext.
@@ -169,6 +194,8 @@ If the response is lost after the burn, the secret is gone. MVP has **no grace w
 
 ### Table `secrets`
 
+With Redis as the chosen store, read this as the logical record, stored as a Redis key (hash or serialized value) with a TTL. The `passphraseProtected`, `salt` and `kdf_params` fields are unused until the passphrase feature is added. A tombstone is a separate key holding only `id`, `state` and a timestamp.
+
 | Column | Notes |
 |---|---|
 | `id` | PK, at least 128 bits from a CSPRNG, base64url |
@@ -186,7 +213,7 @@ If the response is lost after the burn, the secret is gone. MVP has **no grace w
 ### Anti-abuse
 
 - IP rate limiting (token bucket), stricter on failed lookups.
-- Identical 404 for unknown, expired and consumed secrets, **or** a deliberate minimal tombstone. **This is a decision to flag** (see [open decisions](#open-decisions-for-the-product-owner)).
+- **Decided:** a minimal tombstone is kept until the original expiry, so "already viewed" is distinguishable from expired or nonexistent. This leaks that an ID existed, which is an accepted trade-off. See [Decisions](#decisions).
 - Optional CAPTCHA or PoW.
 
 ### Logging
@@ -215,8 +242,8 @@ TLS 1.2 or newer only.
 - Secret is masked with a show toggle, a copy button and auto-hide.
 - Warn that closing the page loses the secret.
 - Messaging: **expired** versus **already viewed**. This is the tombstone trade-off. "Already viewed" signals possible interception.
-- Creator notification options: poll using `deleteToken`, email or webhook, or none in MVP.
-- Nudge users to send the passphrase over a **separate channel**.
+- Creator notification of burn: **none in MVP** (decided). Polling, email or webhook are later options.
+- Later, with passphrases: nudge users to send the passphrase over a **separate channel**.
 - Revoke support.
 - Accessibility: keyboard, screen reader labels, contrast.
 - In-app browsers may strip fragments *[verify]*.
@@ -243,8 +270,10 @@ TLS 1.2 or newer only.
 
 ### Stack options
 
+**Decided: Go single binary** (option 2 below), with Redis as storage per the [decisions](#decisions).
+
 1. **Node/TypeScript:** Fastify or Hono, with Redis, and a vanilla TS or Svelte frontend.
-2. **Go single binary:** `net/http` plus chi, SQLite or Postgres, frontend via `go:embed`. (Yopass is written in Go.)
+2. **Go single binary:** `net/http` plus chi, Redis (chosen; SQLite or Postgres were the alternatives), frontend via `go:embed`. (Yopass is written in Go.)
 
 Either way the server is crypto-free. Keep the server dumb.
 
@@ -266,17 +295,19 @@ Either way the server is crypto-free. Keep the server dumb.
 
 | MVP | Later |
 |---|---|
-| Client-side AES-GCM, single view default, TTL presets, interstitial reveal, atomic consume, delete token, headers, rate limiting, optional PBKDF2 passphrase (pending decision) | Argon2id, multi-view, notifications, CLI/API, files, accounts, CAPTCHA, padding, signed builds |
+| Go single binary with embedded frontend, Redis storage, self-hosted (Docker image or binary), client-side AES-GCM, single view default, TTL presets (5 min, 1 h, 1 day, 7 days; default 24 h), interstitial reveal, atomic consume, minimal tombstones, delete token, headers, rate limiting | Optional passphrase (PBKDF2, then Argon2id), creator notification, multi-view, CLI/API, files, accounts, CAPTCHA, padding, signed builds, hosted SaaS |
 
 ## Open decisions for the product owner
 
-1. **Stack:** Node/TypeScript or Go.
-2. **Tombstones versus generic gone page:** better UX and interception signal, versus leaking existence.
-3. **Passphrase in MVP?**
-4. **Creator notification:** none, polling or email/webhook.
-5. **TTL maximum:** 7d proposed.
-6. **Self-hosted versus SaaS.**
-7. **Storage engine:** Redis, SQLite or Postgres.
+All original decisions were resolved on 2026-11-18. See [Decisions](#decisions).
+
+1. ~~**Stack:** Node/TypeScript or Go.~~ **Resolved:** Go single binary.
+2. ~~**Tombstones versus generic gone page.**~~ **Resolved:** minimal tombstone until original expiry.
+3. ~~**Passphrase in MVP?**~~ **Resolved:** no, added later.
+4. ~~**Creator notification:** none, polling or email/webhook.~~ **Resolved:** none in MVP.
+5. ~~**TTL maximum:** 7d proposed.~~ **Resolved:** 7 days.
+6. ~~**Self-hosted versus SaaS.**~~ **Resolved:** self-hosted first.
+7. ~~**Storage engine:** Redis, SQLite or Postgres.~~ **Resolved:** Redis (over the recommended SQLite).
 
 ## References to check
 
