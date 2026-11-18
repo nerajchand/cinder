@@ -106,3 +106,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: harden (final integration: Redis wiring, full middleware stack, integration + CSP tests) merged-ready.
 - 2026-11-18: Rule added (section 12): when a branch is ready and tests pass, a merge agent merges it without asking the user.
 - 2026-11-18: Rule added (section 13): prefer polling over sleep.
+- 2026-11-18: Makefile docker targets added.
