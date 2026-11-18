@@ -85,6 +85,11 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - Agents (and the coordinator) should prefer polling (check a condition in a loop, or use await-style tools) over `sleep` commands.
 - Use `sleep` only when absolutely necessary.
 
+## 14. Todo tool
+
+- The coordinator uses the todo tool (`pi__todo`) for all tasks.
+- Create todos at the start of a task, mark one `in_progress` at a time, and mark each `completed` immediately when done.
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -115,3 +120,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: dockerize: Dockerfile on golang:1.26, `cinder healthcheck` subcommand + HEALTHCHECK/compose healthcheck, redis.conf reachable on compose network, CINDER_HOST_PORT override; verified end to end with docker compose.
 - 2026-11-18: api-usable: verified curl create/status/consume flow (memory + Redis); added scripts/cinder-cli.mjs (browser-compatible AES-256-GCM CLI), "Using the API with curl" docs, CLI integration and interop tests; fixed docker-compose Redis bind (Redis was unreachable from the cinder container).
 - 2026-11-18: Merged feat/dockerize and feat/api-usable to main (single Redis solution: deploy/redis.conf, no compose command flags); README reconciled with Dockerfile, healthcheck, compose hardening, CLI/curl docs, Makefile docker targets, CINDER_HOST_PORT and Redis bind note.
+- 2026-11-18: Rule added (section 14): use the todo tool for all tasks.
