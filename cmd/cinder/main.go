@@ -19,6 +19,13 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		if err := healthcheck(os.Getenv, http.DefaultClient); err != nil {
+			fmt.Fprintln(os.Stderr, "cinder healthcheck:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(os.Getenv); err != nil {
 		fmt.Fprintln(os.Stderr, "cinder:", err)
 		os.Exit(1)
