@@ -79,3 +79,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Rule added: decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user. Recorded UI/content decisions (markdown envelope, sanitised rendering, vendored deps, client-side QR behind Show QR, dark default, smaller buttons).
 - 2026-11-18: Reveal secret button on interstitial made compact
 - 2026-11-18: Rule added: thinking level by task type (planning/research high, features medium, simple tasks/mockups low).
+- 2026-11-18: T0 scaffold built on feat/scaffold, pending user merge.
