@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Error states · Cinder</title>
+<link rel="stylesheet" href="mockup.css">
+<script src="mockup.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="mock-banner" aria-hidden="true">Static mockup: no backend. </div>
+<header class="site">
+  <a class="brand" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.500 1-9.500z"/></svg>Cinder</a>
+  <button type="button" class="btn secondary theme-toggle" data-theme-toggle hidden>Switch to light</button>
+</header>
+<main id="main">
+<div class="states">
+<section aria-labelledby="h1">
+<h2>State A: key missing from link</h2>
+<div class="card">
+<div class="icon-hero warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>
+<h1 id="h1">This link is incomplete</h1>
+<p class="lead">The decryption key, the part after <code>#</code>, is missing, so the secret cannot be opened.</p>
+<div class="alert warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>The secret has not been used up.</strong>Nothing was fetched. Ask the sender to resend the full link. Some chat and mail apps cut off the end of links; try opening it in a regular browser.</div></div>
+<a class="btn secondary" href="create.html">Create a new secret</a>
+</div>
+</section>
+<section aria-labelledby="h2">
+<h2>State B: JavaScript disabled (shown via noscript)</h2>
+<div class="card">
+<div class="icon-hero danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+<h1 id="h2">JavaScript is required</h1>
+<p class="lead">Cinder encrypts and decrypts secrets in your browser, which needs JavaScript. Without it nothing can be sent or read.</p>
+<div class="alert danger" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Enable JavaScript and reload.</strong>Your secret has not been touched. Cinder uses only scripts served from this site and loads nothing from third parties.</div></div>
+</div>
+<p class="hint">In the real app this block is wrapped in a <code>&lt;noscript&gt;</code> element on every page. It is shown statically here so the design can be reviewed.</p>
+</section>
+</div>
+</main>
+<footer class="site">Burn-on-read secret sharing · self-hosted</footer>
+</body>
+</html>
