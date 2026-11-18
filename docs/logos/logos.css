@@ -1,0 +1,12 @@
+body{margin:0;padding:24px;background:#141110;color:#e8e1da;font-family:system-ui,sans-serif}
+h1{font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.card{background:#1d1917;border:1px solid #3a3330;border-radius:10px;padding:16px}
+.card h2{font-size:15px;margin:0 0 12px;color:#ffb347}
+.big{display:flex;align-items:center;justify-content:center;height:200px;background:#141110;border-radius:8px}
+.big img{max-width:90%;max-height:170px;width:auto;height:170px}
+.row{display:flex;gap:12px;margin-top:12px}
+.sm{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-radius:8px;font-size:12px}
+.dk{background:#141110;border:1px solid #3a3330;color:#bdb5ae}
+.lt{background:#f6f2ee;color:#444}
+.sm img{height:32px;width:auto}

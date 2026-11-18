@@ -107,3 +107,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Rule added (section 12): when a branch is ready and tests pass, a merge agent merges it without asking the user.
 - 2026-11-18: Rule added (section 13): prefer polling over sleep.
 - 2026-11-18: Makefile docker targets added.
+- 2026-11-18: Logo mockups on branch docs/logo-mockups
