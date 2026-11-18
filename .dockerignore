@@ -1,0 +1,12 @@
+.git
+.github
+.gitignore
+.cursor
+bin/
+docs/
+*.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+**/*_test.go
+test/
