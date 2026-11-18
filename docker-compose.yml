@@ -30,10 +30,6 @@ services:
 
   redis:
     image: redis:7
-    # The conf binds loopback only (right for bare metal), which would make Redis
-    # unreachable from the cinder container. Inside this private compose network
-    # (no published ports, no password) listen on all interfaces instead.
-    command: ["redis-server", "/etc/redis/redis.conf", "--bind", "0.0.0.0", "--protected-mode", "no"]
     volumes:
       - ./deploy/redis.conf:/etc/redis/redis.conf:ro
     # Deliberately no data volume (secrets must not outlive the container) and no published ports.

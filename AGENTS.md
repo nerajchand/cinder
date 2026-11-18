@@ -113,3 +113,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: README rewritten (docs/readme branch): features, flow diagram, config table, security model, testing, layout.
 - 2026-11-18: Logo 09-padlock-ember-flame chosen; added to top of README
 - 2026-11-18: dockerize: Dockerfile on golang:1.26, `cinder healthcheck` subcommand + HEALTHCHECK/compose healthcheck, redis.conf reachable on compose network, CINDER_HOST_PORT override; verified end to end with docker compose.
+- 2026-11-18: api-usable: verified curl create/status/consume flow (memory + Redis); added scripts/cinder-cli.mjs (browser-compatible AES-256-GCM CLI), "Using the API with curl" docs, CLI integration and interop tests; fixed docker-compose Redis bind (Redis was unreachable from the cinder container).

@@ -98,6 +98,52 @@ All settings are environment variables. Invalid values make the process exit wit
 
 Numeric rate-limit values must be at most 1000000.
 
+## Using the API with curl
+
+The server is zero-knowledge, so **encryption happens on your side**. Two ways to use it from a shell:
+
+### Option A: the CLI (recommended)
+
+`scripts/cinder-cli.mjs` (Node 18+, no dependencies) encrypts locally with AES-256-GCM, uses the same `{lang,text}` envelope, IV and key encoding as the browser, and prints a normal share link. Links work in both directions (CLI to browser and browser to CLI).
+
+```sh
+export CINDER_URL=http://localhost:8080    # or pass --url
+echo -n 'hunter2' | scripts/cinder-cli.mjs create --ttl 3600 --lang text
+# http://localhost:8080/s/<id>#<key>          (expiry goes to stderr)
+
+scripts/cinder-cli.mjs fetch 'http://localhost:8080/s/<id>#<key>'   # burns it, prints plaintext
+```
+
+`create` reads `--file PATH`, a text argument, or stdin. `fetch` sends the required `Origin` header (taken from the link) and fails with `410 already_viewed` on a second run.
+
+### Option B: raw ciphertext with curl
+
+You must supply base64url (no padding) `ciphertext` (AES-256-GCM output with the 16-byte tag appended) and a 12-byte `iv`. The plaintext should be the JSON envelope `{"lang":"text","text":"..."}`; the key is never sent. Any ciphertext is accepted by the server, which is handy for testing the API shape:
+
+```sh
+B=http://localhost:8080
+IV=$(head -c12 /dev/urandom | basenc --base64url | tr -d =)
+CT=$(head -c32 /dev/urandom | basenc --base64url | tr -d =)   # stand-in for real ciphertext
+
+# create -> 201 {"id":"...","expiresAt":"..."}
+curl -s -X POST $B/api/secrets -H 'Content-Type: application/json' \
+  -d "{\"ciphertext\":\"$CT\",\"iv\":\"$IV\",\"ttlSeconds\":3600}"
+
+ID=<id from above>
+# status (never burns) -> 200 {"state":"available",...}
+curl -s $B/api/secrets/$ID/status
+
+# consume (burns). Origin MUST equal the server's own origin (scheme://host[:port]),
+# Content-Type must be application/json and the body exactly {}.
+curl -s -X POST $B/api/secrets/$ID/consume \
+  -H "Origin: $B" -H 'Content-Type: application/json' -d '{}'
+# -> 200 {"ciphertext":"...","iv":"...","expiresAt":"..."}
+```
+
+Expected failures: a missing or foreign `Origin` gives `403 bad_origin` (and does not burn the secret); consuming again gives `410 already_viewed`; unknown or expired ids give `404 not_found`. Behind a reverse proxy use the public URL as `Origin` (see `CINDER_ALLOWED_ORIGINS` in [docs/operations.md](docs/operations.md)). For real use, encrypt with Option A or any AES-256-GCM tool that follows the format above.
+
+Full contract: [docs/api.md](docs/api.md).
+
 ## API summary
 
 Binary values are base64url without padding. Full contract: [docs/api.md](docs/api.md).
