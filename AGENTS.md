@@ -109,3 +109,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Makefile docker targets added.
 - 2026-11-18: Logo mockups on branch docs/logo-mockups
 - 2026-11-18: Padlock-flame logo variants added
+- 2026-11-18: README rewritten (docs/readme branch): features, flow diagram, config table, security model, testing, layout.
