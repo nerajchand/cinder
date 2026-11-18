@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>View secret · Cinder</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/theme.js"></script>
+<script type="module" src="/static/view.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site">
+  <a class="brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.500 1-9.500z"/></svg>Cinder</a>
+  <button type="button" class="btn secondary theme-toggle" data-theme-toggle hidden>Switch to light</button>
+</header>
+<main id="main">
+<noscript>
+<section class="card" aria-labelledby="h-noscript">
+<div class="icon-hero danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+<h1 id="h-noscript">JavaScript is required</h1>
+<p class="lead">Cinder encrypts and decrypts secrets in your browser, which needs JavaScript. Without it nothing can be sent or read.</p>
+<div class="alert danger" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Enable JavaScript and reload.</strong>Your secret has not been touched. Cinder uses only scripts served from this site and loads nothing from third parties.</div></div>
+</section>
+</noscript>
+<p class="lead center" data-state="loading" role="status" hidden>Checking the link…</p>
+<section class="card" data-state="interstitial" aria-labelledby="h-interstitial" hidden>
+<div class="icon-hero accent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+<h1 id="h-interstitial" tabindex="-1">This secret can only be viewed once</h1>
+<p class="lead">Someone sent you a secret. As soon as you reveal it, it is destroyed and the link stops working.</p>
+<div class="alert info" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div><strong>Nothing has been fetched yet.</strong>Opening this page does not use up the link. Only the button below does. Make sure no one is looking over your shoulder.</div></div>
+<div id="reveal-error" role="alert" hidden></div>
+<button class="btn sm" type="button" id="reveal-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>Reveal secret</button>
+<p class="hint center">Not expecting this? Close the page. The secret stays unread.</p>
+</section>
+<section class="card" data-state="revealed" aria-labelledby="h-revealed" hidden>
+<h1 id="h-revealed" tabindex="-1">Your secret</h1>
+<p class="lead">It has been destroyed on the server. This is the only copy you will see.</p>
+<div class="alert warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Copy it now. Closing or reloading this page loses the secret.</strong>It cannot be shown again, not even with the same link.</div></div>
+<div class="group">
+  <div class="rendered-head"><span class="label flush" id="sec-label">Secret (hidden by default)</span><span class="badge" id="lang-badge" title="Language chosen by the sender"></span></div>
+  <div class="rendered mono-mask" id="secret-mask" tabindex="0" aria-labelledby="sec-label">••••••••••••••••••••••••</div>
+  <div class="rendered md" id="secret-rendered" tabindex="0" aria-labelledby="sec-label" hidden></div>
+  <div class="btn-row">
+    <button class="btn sm secondary" type="button" id="toggle-secret" aria-pressed="false">Show</button>
+    <button class="btn sm" type="button" id="copy-secret">Copy secret</button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<p class="meta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>For safety the secret hides itself again after 30 seconds of being shown. The page then clears it entirely after 5 minutes.</span></p>
+</section>
+<section class="card" data-state="cleared" aria-labelledby="h-cleared" hidden>
+<div class="icon-hero muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+<h1 id="h-cleared" tabindex="-1">Secret cleared</h1>
+<p class="lead">For your safety this page cleared the secret after 5 minutes. It has been destroyed on the server and cannot be shown again.</p>
+<a class="btn secondary" href="/">Create a new secret</a>
+</section>
+<section class="card" data-state="viewed" aria-labelledby="h-viewed" hidden>
+<div class="icon-hero danger small"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+<h1 id="h-viewed" tabindex="-1">This secret has already been viewed</h1>
+<p class="lead">It was opened and destroyed, so it cannot be shown again.</p>
+<div class="alert danger" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>This link may have been intercepted.</strong>If you did not open it yourself, someone else may have. Treat the secret as compromised: ask the sender to change or revoke it, then send a new link over a different channel.</div></div>
+<ul class="muted-list">
+<li>Chat or mail previewers can sometimes open links. Cinder never burns on preview, so a burn means a person (or script) pressed Reveal.</li>
+<li>The sender can create a fresh link for you.</li>
+</ul>
+<a class="btn secondary" href="/">Create a new secret</a>
+</section>
+<section class="card" data-state="expired" aria-labelledby="h-expired" hidden>
+<div class="icon-hero muted"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+<h1 id="h-expired" tabindex="-1">This secret has expired or does not exist</h1>
+<p class="lead">The link may have passed its expiry time, been mistyped, or never existed.</p>
+<div class="alert info" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div><strong>Nothing was viewed.</strong>This is different from a viewed secret. Check that the whole link was copied, then ask the sender for a new one if needed.</div></div>
+<a class="btn secondary" href="/">Create a new secret</a>
+</section>
+<section class="card" data-state="nokey" aria-labelledby="h-nokey" hidden>
+<div class="icon-hero warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></div>
+<h1 id="h-nokey" tabindex="-1">This link is incomplete</h1>
+<p class="lead">The decryption key, the part after <code>#</code>, is missing, so the secret cannot be opened.</p>
+<div class="alert warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>The secret has not been used up.</strong>Nothing was fetched. Ask the sender to resend the full link. Some chat and mail apps cut off the end of links; try opening it in a regular browser.</div></div>
+<a class="btn secondary" href="/">Create a new secret</a>
+</section>
+<section class="card" data-state="undecryptable" aria-labelledby="h-undecryptable" hidden>
+<div class="icon-hero danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+<h1 id="h-undecryptable" tabindex="-1">The secret could not be decrypted</h1>
+<p class="lead">The data was fetched and destroyed on the server, but the key in this link did not unlock it.</p>
+<div class="alert danger" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>The link was probably altered or truncated.</strong>The secret cannot be recovered. Ask the sender to create a new link and send it again in full.</div></div>
+<a class="btn secondary" href="/">Create a new secret</a>
+</section>
+<section class="card" data-state="error" aria-labelledby="h-error" hidden>
+<div class="icon-hero warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+<h1 id="h-error" tabindex="-1">Something went wrong</h1>
+<p class="lead" id="error-message">The secret could not be checked right now.</p>
+<div class="alert info" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><div><strong>The secret has not been used up.</strong>Nothing has been revealed. You can try again in a moment.</div></div>
+<button class="btn sm" type="button" id="retry-btn">Try again</button>
+</section>
+</main>
+<footer class="site">Burn-on-read secret sharing · self-hosted</footer>
+</body>
+</html>

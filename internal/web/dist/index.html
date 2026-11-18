@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="color-scheme" content="dark light">
+<title>Create a secret · Cinder</title>
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css">
+<script src="/static/theme.js"></script>
+<script type="module" src="/static/create.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site">
+  <a class="brand" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2 1-3.5 2-4.5 0 2 1 3 2 3 0-3-1-5.500 1-9.500z"/></svg>Cinder</a>
+  <button type="button" class="btn secondary theme-toggle" data-theme-toggle hidden>Switch to light</button>
+</header>
+<main id="main">
+<noscript>
+<section class="card" aria-labelledby="h-noscript">
+<div class="icon-hero danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
+<h1 id="h-noscript">JavaScript is required</h1>
+<p class="lead">Cinder encrypts and decrypts secrets in your browser, which needs JavaScript. Without it nothing can be sent or read.</p>
+<div class="alert danger" role="alert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>Enable JavaScript and reload.</strong>Your secret has not been touched. Cinder uses only scripts served from this site and loads nothing from third parties.</div></div>
+</section>
+</noscript>
+<section class="card" id="create-card" aria-labelledby="h" hidden>
+<h1 id="h">Share a secret, once.</h1>
+<p class="lead">Paste a password, key, snippet or note. You get a link that works one time, then burns.</p>
+<form id="create-form" novalidate>
+  <div class="group">
+    <span class="label" id="sec-lbl">Your secret</span>
+    <div class="editor">
+      <div class="editor-bar">
+        <div class="tabs" role="tablist" aria-label="Editor mode">
+          <button type="button" class="tab" role="tab" id="tab-write" aria-selected="true" aria-controls="panel-write">Write</button>
+          <button type="button" class="tab" role="tab" id="tab-preview" aria-selected="false" aria-controls="panel-preview" tabindex="-1">Preview</button>
+        </div>
+        <div class="lang">
+          <label for="lang">Language</label>
+          <select id="lang" name="lang"><option value="text">Plain text</option><option value="markdown" selected>Markdown</option><option value="json">JSON</option><option value="yaml">YAML</option><option value="bash">Bash</option><option value="go">Go</option><option value="python">Python</option><option value="javascript">JavaScript</option><option value="typescript">TypeScript</option><option value="sql">SQL</option><option value="html">HTML</option><option value="xml">XML</option><option value="toml">TOML</option><option value="dockerfile">Dockerfile</option></select>
+        </div>
+      </div>
+      <div id="panel-write" role="tabpanel" aria-labelledby="tab-write">
+        <textarea id="secret-input" name="secret" spellcheck="false" autocomplete="off" autocapitalize="off" aria-labelledby="sec-lbl" aria-describedby="counter hint-secret" placeholder="Paste or type a secret. Markdown is supported: # headings, lists, and fenced code blocks."></textarea>
+      </div>
+      <div id="panel-preview" class="preview md" role="tabpanel" aria-labelledby="tab-preview" tabindex="0" hidden></div>
+    </div>
+    <div class="row"><span class="hint noflush" id="hint-secret">Markdown and code supported. Preview is rendered safely in your browser. Maximum 64 KiB including encryption overhead.</span><span class="counter" id="counter" aria-live="polite">0 / 65,520 bytes (64 KiB)</span></div>
+  </div>
+  <div class="group">
+    <label for="ttl">Expires after</label>
+    <select id="ttl" name="ttl" aria-describedby="ttl-hint">
+      <option value="300">5 minutes</option>
+      <option value="3600">1 hour</option>
+      <option value="86400" selected>1 day</option>
+      <option value="604800">7 days</option>
+    </select>
+    <p class="hint" id="ttl-hint">The link stops working at this time even if nobody opens it.</p>
+  </div>
+  <div id="form-error" role="alert" hidden></div>
+  <button class="btn sm block" type="submit" id="submit-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Create secret link</button>
+</form>
+<p class="encnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg><span>Your secret is encrypted in your browser before it is sent. The server only stores ciphertext and never sees the key, which lives in the part of the link after the <code>#</code>.</span></p>
+</section>
+<section class="card" id="created-card" aria-labelledby="h-created" hidden>
+<div class="icon-hero ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></svg></div>
+<h1 id="h-created" tabindex="-1">Your secret link is ready</h1>
+<p class="lead">Send this link to the one person who should see the secret.</p>
+<div class="alert warn" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><div><strong>This link is the secret.</strong>Anyone who opens it first will see the secret. It is destroyed after one view, and we cannot recover it or show this link again. Send it over a channel you trust.</div></div>
+<div class="group">
+  <label for="share-link">Share link</label>
+  <div class="linkbox">
+    <input class="field" id="share-link" type="text" readonly spellcheck="false" autocomplete="off">
+    <button class="btn" type="button" id="copy-link">Copy link</button>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+</div>
+<div class="qr-wrap">
+<button class="btn secondary" type="button" id="qr-toggle" aria-expanded="false" aria-controls="qr-panel">Show QR code</button>
+<div class="qr" id="qr-panel" hidden>
+<canvas id="qr-canvas" role="img" aria-label="QR code containing the full secret link"></canvas>
+<div><p><strong>Scan to open on another device</strong></p><p class="hint noflush">This QR code contains the full link, including the decryption key after the <code>#</code>. Treat it like the link: do not share a screenshot of it. It is generated in your browser and never sent anywhere.</p></div>
+</div>
+</div>
+<p class="meta"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Expires <time id="expires-at"></time>, or after one view, whichever comes first.</span></p>
+<hr class="sep">
+<a class="btn secondary" href="/">Create another secret</a>
+</section>
+</main>
+<footer class="site">Burn-on-read secret sharing · self-hosted</footer>
+</body>
+</html>
