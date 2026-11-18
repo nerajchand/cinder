@@ -20,6 +20,11 @@ type Deps struct {
 	// AllowedOrigins are extra normalized origins (scheme://host[:port])
 	// accepted on consume, besides the request's own origin.
 	AllowedOrigins []string
+	// OriginCheck, when set, is THE authoritative consume Origin check (the
+	// handler runs it before anything else; no other layer repeats it).
+	// cmd/cinder passes middleware.OriginChecker. When nil, a built-in
+	// check using AllowedOrigins and RequestScheme is used.
+	OriginCheck func(*http.Request) bool
 	// RequestScheme reports the scheme ("http"/"https") as seen by the
 	// client, honouring trusted proxies. Defaults to TLS detection.
 	RequestScheme func(*http.Request) string
@@ -34,6 +39,7 @@ type server struct {
 	maxCT          int
 	allowedOrigins map[string]bool
 	scheme         func(*http.Request) string
+	originCheck    func(*http.Request) bool
 	log            *slog.Logger
 	now            func() time.Time
 }
@@ -47,6 +53,7 @@ func NewRouter(d Deps, web http.Handler, chain ...Middleware) http.Handler {
 		maxCT:          d.MaxCiphertextBytes,
 		allowedOrigins: map[string]bool{},
 		scheme:         d.RequestScheme,
+		originCheck:    d.OriginCheck,
 		log:            d.Logger,
 		now:            d.Now,
 	}

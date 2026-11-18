@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/cinder/cinder/internal/idgen"
+	"github.com/cinder/cinder/internal/middleware"
 	"github.com/cinder/cinder/internal/store"
 )
 
@@ -68,9 +69,8 @@ func decodeBody(w http.ResponseWriter, r *http.Request, limit int64, dst any) bo
 		}
 	}
 	if err != nil {
-		var mbe *http.MaxBytesError
-		if errors.As(err, &mbe) {
-			writeError(w, http.StatusRequestEntityTooLarge, codePayloadTooLarge, "Request body too large.")
+		if middleware.IsBodyTooLarge(err) {
+			middleware.WriteTooLarge(w)
 			return false
 		}
 		writeError(w, http.StatusBadRequest, codeBadRequest, "Invalid JSON body.")
@@ -181,6 +181,9 @@ func (s *server) status(w http.ResponseWriter, r *http.Request) {
 // originOK reports whether the Origin header matches the request origin or
 // an allowed origin. A missing Origin is rejected.
 func (s *server) originOK(r *http.Request) bool {
+	if s.originCheck != nil {
+		return s.originCheck(r)
+	}
 	o := strings.ToLower(r.Header.Get("Origin"))
 	if o == "" {
 		return false

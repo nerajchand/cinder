@@ -1,13 +1,21 @@
 package main
 
 import (
-	"errors"
+	"context"
+	"fmt"
+	"time"
 
 	"github.com/cinder/cinder/internal/store"
 )
 
-// TODO(harden): wire the Redis-backed store here. The harden task replaces
-// this stub with a real implementation of store.Store using redisURL.
-func newRedisStore(redisURL string) (store.Store, error) {
-	return nil, errors.New("redis store: not wired")
+// newRedisStore connects to Redis (verifying the server version) and returns
+// the store plus a close function.
+func newRedisStore(ctx context.Context, redisURL string) (store.Store, func() error, error) {
+	cctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+	r, err := store.NewRedis(cctx, redisURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("redis store: %w", err)
+	}
+	return r, r.Close, nil
 }

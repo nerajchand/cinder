@@ -6,16 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
-	"net/netip"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/cinder/cinder/internal/api"
+	"github.com/cinder/cinder/internal/app"
 	"github.com/cinder/cinder/internal/config"
 	"github.com/cinder/cinder/internal/store"
 )
@@ -49,19 +47,15 @@ func run(getenv func(string) string) error {
 		go mem.RunJanitor(ctx, time.Minute)
 		st = mem
 		log.Warn("using in-memory store; secrets are lost on restart")
-	} else if st, err = newRedisStore(cfg.RedisURL); err != nil {
-		return err
+	} else {
+		var closeStore func() error
+		if st, closeStore, err = newRedisStore(ctx, cfg.RedisURL); err != nil {
+			return err
+		}
+		defer closeStore()
 	}
 
-	// TODO(web): pass the static handler from internal/web once available.
-	// TODO(middleware): pass the middleware chain from internal/middleware.
-	handler := api.NewRouter(api.Deps{
-		Store:              st,
-		MaxCiphertextBytes: cfg.MaxCiphertextBytes,
-		AllowedOrigins:     cfg.AllowedOrigins,
-		RequestScheme:      schemeFunc(cfg.TrustedProxies),
-		Logger:             log,
-	}, nil)
+	handler := app.NewHandler(cfg, st, log)
 
 	srv := &http.Server{
 		Addr:              cfg.Addr,
@@ -94,31 +88,4 @@ func run(getenv func(string) string) error {
 		return err
 	}
 	return nil
-}
-
-// schemeFunc returns the client-visible scheme: X-Forwarded-Proto is only
-// honoured when the direct peer is a trusted proxy.
-func schemeFunc(trusted []netip.Prefix) func(*http.Request) string {
-	return func(r *http.Request) string {
-		if r.TLS != nil {
-			return "https"
-		}
-		if len(trusted) > 0 {
-			host, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err == nil {
-				if a, err := netip.ParseAddr(host); err == nil {
-					a = a.Unmap()
-					for _, p := range trusted {
-						if p.Contains(a) {
-							if strings.EqualFold(r.Header.Get("X-Forwarded-Proto"), "https") {
-								return "https"
-							}
-							break
-						}
-					}
-				}
-			}
-		}
-		return "http"
-	}
 }
