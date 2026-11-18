@@ -59,6 +59,14 @@ Design decisions live in `docs/design.md`. MVP decisions:
 
 - Decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user for permission.
 
+## 10. Thinking level
+
+- Match reasoning effort to the work.
+- Planning and big research = HIGH.
+- Feature work (developers building features) = MEDIUM.
+- Simple tasks and mockups = LOW.
+- The coordinator states the intended effort level in each subagent prompt, because the Task tool has no effort parameter.
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -70,3 +78,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: mockups revised after user review: markdown/code-language input, QR code on link page, smaller tombstone image
 - 2026-11-18: Rule added: decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user. Recorded UI/content decisions (markdown envelope, sanitised rendering, vendored deps, client-side QR behind Show QR, dark default, smaller buttons).
 - 2026-11-18: Reveal secret button on interstitial made compact
+- 2026-11-18: Rule added: thinking level by task type (planning/research high, features medium, simple tasks/mockups low).
