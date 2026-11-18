@@ -38,3 +38,4 @@
 
 - 2026-11-18: Initial version.
 - 2026-11-18: Repo initialized with git init on main; worktrees now available.
+- 2026-11-18: Design docs authored on branch docs/design (worktree ../Cinder-worktrees/docs-design), pending user review/merge.

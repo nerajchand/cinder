@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cinder: Design Research and Architecture</title><style>
+:root{--fg:#1f2328;--mut:#59636e;--bg:#fff;--acc:#c2410c;--line:#d8dee4;--code:#f6f8fa}
+@media(prefers-color-scheme:dark){:root{--fg:#e6edf3;--mut:#9198a1;--bg:#0d1117;--acc:#fb923c;--line:#30363d;--code:#161b22}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+main{max-width:860px;margin:0 auto;padding:2.5rem 1.25rem 5rem}
+h1{font-size:2.2rem;line-height:1.2;border-bottom:3px solid var(--acc);padding-bottom:.4rem}
+h2{margin-top:2.6rem;padding-bottom:.3rem;border-bottom:1px solid var(--line)}
+h3{margin-top:1.8rem;color:var(--acc)}
+a{color:var(--acc)}
+code{font:.88em ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--code);padding:.15em .35em;border-radius:4px}
+pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:1rem;overflow-x:auto;line-height:1.5}
+pre code{background:none;padding:0;font-size:.85rem}
+table{border-collapse:collapse;width:100%;margin:1.2rem 0;font-size:.93rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+th{background:var(--code)}
+tbody tr:nth-child(even){background:var(--code)}
+blockquote.warn{margin:1.2rem 0;padding:1rem 1.2rem;border-left:6px solid var(--acc);background:rgba(251,146,60,.14);border-radius:6px}
+li.chk{list-style:none;margin-left:-1.3rem}
+li{margin:.25rem 0}
+</style></head><body><main>
+<h1 id="cinder-design-research-and-architecture">Cinder: Design Research and Architecture</h1>
+<blockquote class="warn"><strong>Honesty note: please read first.</strong> The research behind this document was done <strong>from prior knowledge, not live web lookups</strong>. No sources were fetched or verified while writing it. Version numbers, iteration counts, header values and product behaviours may be out of date or wrong. Treat the URLs in <a href="#references-to-check">References to check</a> as <em>references to check</em>, <strong>not verified citations</strong>. Anything under <a href="#items-to-verify">Items to verify</a> must be confirmed before it is relied on.</blockquote>
+<p>Cinder is a planned web tool for sharing secrets on a <strong>burn-on-read</strong> basis: the secret is destroyed once it has been viewed.</p>
+<h2 id="contents">Contents</h2>
+<ol><li><a href="#items-to-verify">Items to verify</a></li><li><a href="#threat-model-and-goals">Threat model and goals</a></li><li><a href="#encryption-design">Encryption design</a></li><li><a href="#burn-on-read-correctness">Burn-on-read correctness</a></li><li><a href="#expiry-storage-and-size">Expiry, storage and size</a></li><li><a href="#api-and-data-model">API and data model</a></li><li><a href="#ux">UX</a></li><li><a href="#pitfalls-and-stack-options">Pitfalls and stack options</a></li><li><a href="#testing-and-scope">Testing and scope</a></li><li><a href="#open-decisions-for-the-product-owner">Open decisions for the product owner</a></li><li><a href="#references-to-check">References to check</a></li></ol>
+<h2 id="items-to-verify">Items to verify</h2>
+<p>These claims come from memory and are <strong>unverified</strong>:</p>
+<ul><li class="chk"><input type="checkbox" disabled> Current OWASP Password Storage Cheat Sheet parameters: PBKDF2-HMAC-SHA256 about 600,000 iterations; Argon2id minimums (for example m=19 MiB, t=2, p=1).</li><li class="chk"><input type="checkbox" disabled> Redis <code>GETDEL</code> exists from Redis 6.2.</li><li class="chk"><input type="checkbox" disabled> SQLite <code>RETURNING</code> exists from 3.35. PostgreSQL <code>DELETE ... RETURNING</code> behaviour and isolation.</li><li class="chk"><input type="checkbox" disabled> WebCrypto AES-GCM: 96-bit IV recommended, 128-bit tag default, and the <code>additionalData</code> parameter.</li><li class="chk"><input type="checkbox" disabled> <code>crypto.subtle</code> is only available in secure contexts (HTTPS or localhost).</li><li class="chk"><input type="checkbox" disabled> Argon2 WASM libraries (<code>hash-wasm</code>, <code>argon2-browser</code>): maintenance status and size.</li><li class="chk"><input type="checkbox" disabled> In-app browsers (Slack, Teams, mobile mail clients) may strip or mangle URL fragments.</li><li class="chk"><input type="checkbox" disabled> Link scanners and unfurlers (Slack, Teams, Outlook Safe Links, email gateways) issue GET requests, and some execute JavaScript.</li><li class="chk"><input type="checkbox" disabled> Vault response-wrapping and cubbyhole semantics as described below.</li><li class="chk"><input type="checkbox" disabled> Header values (HSTS preload requirements, COOP behaviour, CSP directives) against current browser behaviour.</li><li class="chk"><input type="checkbox" disabled> Behaviour of OneTimeSecret, Snappass, Yopass, PrivateBin and Bitwarden Send as characterised here.</li><li class="chk"><input type="checkbox" disabled> <code>history.replaceState</code> removes the fragment from session history and from browser history sync.</li></ul>
+<h2 id="threat-model-and-goals">Threat model and goals</h2>
+<h3 id="adversaries">Adversaries</h3>
+<table><thead><tr><th>Adversary</th><th>Concern</th></tr></thead><tbody><tr><td>Honest-but-curious or compromised server operator</td><td>Reads stored data, logs and live traffic</td></tr><tr><td>Database or backup leak</td><td>Stored records exposed, including old snapshots</td></tr><tr><td>Network MITM</td><td>Intercepts or alters traffic</td></tr><tr><td>Link scanners, unfurlers, prefetchers (Slack, Teams, email gateways)</td><td>Issue GET/HEAD requests and may burn the secret before the human does</td></tr><tr><td>Link interception in chat</td><td>Link is read by a third party, or a past message is searched later</td></tr><tr><td>Shoulder-surfing</td><td>Secret visible on screen</td></tr><tr><td>Browser-side risks</td><td>Extensions, history, <code>Referer</code>, XSS</td></tr><tr><td>Abusers</td><td>Use Cinder for spam, malware or storage, or enumerate IDs</td></tr></tbody></table>
+<h3 id="out-of-scope">Out of scope</h3>
+<ul><li>A compromised recipient endpoint.</li><li>The recipient copying the secret.</li><li>A malicious operator serving modified JavaScript. Mitigate partly with SRI, self-hosting and a CLI. This is not fully solvable in a web app.</li></ul>
+<h3 id="goals">Goals</h3>
+<ul><li>The server <strong>never sees plaintext</strong>.</li><li>A secret is revealable at most N times (default 1).</li><li>Secrets expire.</li><li>Bots cannot burn a secret.</li><li>Nothing sensitive appears in logs.</li></ul>
+<h2 id="encryption-design">Encryption design</h2>
+<h3 id="recommended-default-client-side-end-to-end">Recommended default: client-side end-to-end</h3>
+<ol><li>The browser generates a 256-bit AES-GCM key with WebCrypto, and a fresh random 96-bit IV for every encryption.</li><li>It sends <code>{ciphertext, iv, ttl, maxViews}</code> to the server.</li><li>The share link is <code>https://host/s/&lt;id&gt;#&lt;base64url(key)&gt;</code>.</li><li>The fragment is never sent to the server.</li><li>After reading the key, the page scrubs the fragment with <code>history.replaceState</code>.</li><li>Bind the id and metadata as AES-GCM <strong>AAD</strong> (additional authenticated data).</li><li>Use base64url encoding throughout.</li><li>A secure context (HTTPS) is required for <code>crypto.subtle</code>.</li><li>Optional later: pad plaintext to hide its length.</li></ol>
+<pre><code>// sketch only
+const key = await crypto.subtle.generateKey({ name: &#x27;AES-GCM&#x27;, length: 256 }, true, [&#x27;encrypt&#x27;, &#x27;decrypt&#x27;]);
+const iv = crypto.getRandomValues(new Uint8Array(12));
+const ct = await crypto.subtle.encrypt({ name: &#x27;AES-GCM&#x27;, iv, additionalData: aad }, key, plaintextBytes);</code></pre>
+<h3 id="optional-passphrase">Optional passphrase</h3>
+<ul><li>KDF choices: <strong>Argon2id</strong> is preferred but needs WASM (for example <code>hash-wasm</code> or <code>argon2-browser</code>). <strong>PBKDF2-HMAC-SHA256</strong> is native, with roughly 600k iterations <em>[verify OWASP numbers]</em>. <strong>scrypt</strong> is an alternative.</li><li>Recommended design: <strong>combine</strong> the random fragment key with a passphrase-derived key, using a per-secret salt.</li><li>A wrong passphrase shows up as an AES-GCM authentication failure.</li><li>The server stores <strong>no passphrase hash</strong>.</li><li>Limitation: someone holding both the DB and the link can brute-force a weak passphrase offline.</li><li><strong>MVP: PBKDF2. Defer Argon2id.</strong></li></ul>
+<h3 id="alternative-server-side-encryption">Alternative: server-side encryption</h3>
+<p>OneTimeSecret (classic), Snappass (Fernet) and Vault do this. It is simpler and curl-friendly, but <strong>the server sees plaintext</strong>.</p>
+<h3 id="trade-offs">Trade-offs</h3>
+<table><thead><tr><th>Aspect</th><th>Client-side E2E (recommended)</th><th>Server-side encryption</th></tr></thead><tbody><tr><td>Server sees plaintext</td><td>No</td><td>Yes</td></tr><tr><td>DB or backup leak</td><td>Ciphertext only, key is in the link</td><td>Depends on server key management</td></tr><tr><td>curl / API friendliness</td><td>Needs a client or CLI</td><td>Trivial</td></tr><tr><td>Needs JavaScript in browser</td><td>Yes</td><td>No</td></tr><tr><td>Operator serving malicious JS</td><td>Risk</td><td>Not applicable, but operator already sees everything</td></tr><tr><td>Complexity</td><td>Higher</td><td>Lower</td></tr></tbody></table>
+<h3 id="lesson-from-vault-cubbyhole-and-response-wrapping">Lesson from Vault cubbyhole and response wrapping</h3>
+<p>Provide a <strong>non-destructive status check</strong> plus an <strong>atomic consume</strong>. If an unwrap fails because the secret is already gone, that reveals possible interception.</p>
+<h2 id="burn-on-read-correctness">Burn-on-read correctness</h2>
+<h3 id="atomic-read-and-delete">Atomic read-and-delete</h3>
+<ul><li><strong>Redis:</strong> <code>GETDEL</code> (&gt;= 6.2), or a Lua script for N views.</li><li><strong>SQL:</strong> <code>DELETE ... RETURNING</code>, or <code>UPDATE secrets SET views_left = views_left - 1 WHERE id = $1 AND views_left &gt; 0 AND expires_at &gt; now() RETURNING ...</code></li><li><strong>SQLite:</strong> <code>RETURNING</code> needs &gt;= 3.35.</li><li><strong>Never</strong> GET-then-DEL.</li></ul>
+<h3 id="lost-in-transit">Lost in transit</h3>
+<p>If the response is lost after the burn, the secret is gone. MVP has <strong>no grace window</strong>. The creator must resend.</p>
+<h3 id="bot-safety">Bot safety</h3>
+<ul><li><code>GET /s/&lt;id&gt;</code> serves a <strong>static shell only</strong>.</li><li>Optional non-destructive <code>GET /api/secrets/&lt;id&gt;/status</code>.</li><li>The user clicks <strong>Reveal</strong>, which sends <code>POST /api/secrets/&lt;id&gt;/consume</code>.</li><li>GET, HEAD and OPTIONS never burn (RFC 9110 safe methods).</li><li><code>noindex</code>, and no <code>og:</code> metadata, so unfurlers show nothing useful.</li><li>Optional PoW or CAPTCHA on consume.</li><li>Check <code>Origin</code> on consume.</li><li><code>Cache-Control: no-store</code> everywhere.</li></ul>
+<h2 id="expiry-storage-and-size">Expiry, storage and size</h2>
+<ul><li><strong>TTL presets:</strong> 5m, 1h, 1d, 7d. Hard maximum 7d. Default 24h.</li><li>Enforce <code>expires_at</code> <strong>in the read query</strong> and also run a cleanup job.</li><li><strong>Max views:</strong> default 1, capped around 10.</li></ul>
+<table><thead><tr><th>Storage</th><th>Persistence risk</th></tr></thead><tbody><tr><td>Redis</td><td>RDB and AOF files, replicas</td></tr><tr><td>SQL</td><td>WAL, free pages, backups retain remnants</td></tr></tbody></table>
+<ul><li><strong>Secure deletion has limits.</strong> Deleted data may linger in snapshots, WAL, free pages and backups. This is exactly why E2E matters: what lingers is ciphertext.</li><li><strong>Size limits:</strong> roughly 10 KB to 1 MB, enforced at both the reverse proxy and the app.</li><li>Files are a later feature.</li></ul>
+<h2 id="api-and-data-model">API and data model</h2>
+<h3 id="endpoints">Endpoints</h3>
+<table><thead><tr><th>Method and path</th><th>Purpose</th></tr></thead><tbody><tr><td><code>POST /api/secrets</code></td><td>Body <code>{ciphertext, iv, salt?, kdfParams?, passphraseProtected, ttlSeconds, maxViews}</code>. Returns <code>{id, expiresAt, deleteToken}</code></td></tr><tr><td><code>GET /api/secrets/{id}/status</code></td><td>Non-destructive existence check</td></tr><tr><td><code>POST /api/secrets/{id}/consume</code></td><td>Atomic read and burn</td></tr><tr><td><code>DELETE /api/secrets/{id}</code></td><td>Revoke using <code>deleteToken</code></td></tr><tr><td><code>GET /s/{id}</code></td><td>Static shell page</td></tr><tr><td><code>GET /healthz</code></td><td>Health check</td></tr></tbody></table>
+<h3 id="table-secrets">Table <code>secrets</code></h3>
+<table><thead><tr><th>Column</th><th>Notes</th></tr></thead><tbody><tr><td><code>id</code></td><td>PK, at least 128 bits from a CSPRNG, base64url</td></tr><tr><td><code>ciphertext</code></td><td>Encrypted blob</td></tr><tr><td><code>iv</code></td><td>Per-encryption IV</td></tr><tr><td><code>salt</code></td><td>NULL unless passphrase-protected</td></tr><tr><td><code>kdf_params</code></td><td>NULL unless passphrase-protected</td></tr><tr><td><code>views_left</code></td><td>Remaining views</td></tr><tr><td><code>created_at</code></td><td>Timestamp</td></tr><tr><td><code>expires_at</code></td><td>Timestamp</td></tr><tr><td><code>delete_token_hash</code></td><td>Hash of the delete token</td></tr></tbody></table>
+<p><strong>No IPs or User-Agents are stored.</strong></p>
+<h3 id="anti-abuse">Anti-abuse</h3>
+<ul><li>IP rate limiting (token bucket), stricter on failed lookups.</li><li>Identical 404 for unknown, expired and consumed secrets, <strong>or</strong> a deliberate minimal tombstone. <strong>This is a decision to flag</strong> (see <a href="#open-decisions-for-the-product-owner">open decisions</a>).</li><li>Optional CAPTCHA or PoW.</li></ul>
+<h3 id="logging">Logging</h3>
+<ul><li>Never log bodies or ciphertext.</li><li>Beware client-side error trackers capturing <code>location.hash</code>.</li><li>Redact IDs in logs.</li></ul>
+<h3 id="security-headers">Security headers</h3>
+<pre><code>Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+Content-Security-Policy: default-src &#x27;none&#x27;; script-src &#x27;self&#x27;; style-src &#x27;self&#x27;; connect-src &#x27;self&#x27;; img-src &#x27;self&#x27; data:; base-uri &#x27;none&#x27;; form-action &#x27;self&#x27;; frame-ancestors &#x27;none&#x27;
+Referrer-Policy: no-referrer
+Cache-Control: no-store
+X-Content-Type-Options: nosniff
+Cross-Origin-Opener-Policy: same-origin
+X-Robots-Tag: noindex, nofollow</code></pre>
+<p>TLS 1.2 or newer only.</p>
+<h2 id="ux">UX</h2>
+<ul><li><strong>Interstitial</strong> before reveal, so a bot or accidental visit does not burn it.</li><li>Secret is masked with a show toggle, a copy button and auto-hide.</li><li>Warn that closing the page loses the secret.</li><li>Messaging: <strong>expired</strong> versus <strong>already viewed</strong>. This is the tombstone trade-off. "Already viewed" signals possible interception.</li><li>Creator notification options: poll using <code>deleteToken</code>, email or webhook, or none in MVP.</li><li>Nudge users to send the passphrase over a <strong>separate channel</strong>.</li><li>Revoke support.</li><li>Accessibility: keyboard, screen reader labels, contrast.</li><li>In-app browsers may strip fragments <em>[verify]</em>.</li><li>A clear message when JavaScript is disabled.</li></ul>
+<h2 id="pitfalls-and-stack-options">Pitfalls and stack options</h2>
+<h3 id="pitfalls">Pitfalls</h3>
+<ul><li>Burning on GET.</li><li>Non-atomic read and delete races.</li><li>Fragment leaks: <code>Referer</code>, analytics, history sync, redirects.</li><li>IV reuse.</li><li><code>Math.random</code> instead of CSPRNG.</li><li>XSS: use <code>textContent</code>, never <code>innerHTML</code>.</li><li>Redis persistence, and CDN caching of responses.</li><li>Secrets in logs or WAF captures.</li><li>Malicious JS and trust-on-first-use.</li><li>Lost in transit.</li><li>Clock skew.</li><li>DoS via large payloads.</li><li>Passphrase sent in the same channel as the link.</li><li>Clipboard history.</li></ul>
+<h3 id="stack-options">Stack options</h3>
+<ol><li><strong>Node/TypeScript:</strong> Fastify or Hono, with Redis, and a vanilla TS or Svelte frontend.</li><li><strong>Go single binary:</strong> <code>net/http</code> plus chi, SQLite or Postgres, frontend via <code>go:embed</code>. (Yopass is written in Go.)</li></ol>
+<p>Either way the server is crypto-free. Keep the server dumb.</p>
+<h2 id="testing-and-scope">Testing and scope</h2>
+<h3 id="tests">Tests</h3>
+<ul><li>Crypto: round trip, tamper detection, IV uniqueness.</li><li>Concurrency: 100 parallel consumes give exactly 1 success, and exactly K for <code>maxViews=K</code>.</li><li>Time-mocked expiry.</li><li>Bot safety: GET, HEAD and OPTIONS never burn.</li><li>Headers check.</li><li>Grep logs for secrets.</li><li>Playwright E2E: fragment is stripped, and the secret is not in the DOM before the click.</li><li>Fuzzing, ZAP, dependency audit.</li><li>Failure injection.</li></ul>
+<h3 id="mvp-versus-later">MVP versus later</h3>
+<table><thead><tr><th>MVP</th><th>Later</th></tr></thead><tbody><tr><td>Client-side AES-GCM, single view default, TTL presets, interstitial reveal, atomic consume, delete token, headers, rate limiting, optional PBKDF2 passphrase (pending decision)</td><td>Argon2id, multi-view, notifications, CLI/API, files, accounts, CAPTCHA, padding, signed builds</td></tr></tbody></table>
+<h2 id="open-decisions-for-the-product-owner">Open decisions for the product owner</h2>
+<ol><li><strong>Stack:</strong> Node/TypeScript or Go.</li><li><strong>Tombstones versus generic gone page:</strong> better UX and interception signal, versus leaking existence.</li><li><strong>Passphrase in MVP?</strong></li><li><strong>Creator notification:</strong> none, polling or email/webhook.</li><li><strong>TTL maximum:</strong> 7d proposed.</li><li><strong>Self-hosted versus SaaS.</strong></li><li><strong>Storage engine:</strong> Redis, SQLite or Postgres.</li></ol>
+<h2 id="references-to-check">References to check</h2>
+<p>These are <strong>not verified citations</strong>. They were recalled from memory and have not been opened.</p>
+<ul><li>OneTimeSecret: <a href="https://github.com/onetimesecret/onetimesecret">https://github.com/onetimesecret/onetimesecret</a></li><li>PrivateBin: <a href="https://privatebin.info">https://privatebin.info</a></li><li>Yopass: <a href="https://github.com/jhaals/yopass">https://github.com/jhaals/yopass</a></li><li>Bitwarden Send: <a href="https://bitwarden.com/help/about-send/">https://bitwarden.com/help/about-send/</a></li><li>Snappass: <a href="https://github.com/pinterest/snappass">https://github.com/pinterest/snappass</a></li><li>Vault response wrapping: <a href="https://developer.hashicorp.com/vault/docs/concepts/response-wrapping">https://developer.hashicorp.com/vault/docs/concepts/response-wrapping</a></li><li>OWASP cheat sheets: <a href="https://cheatsheetseries.owasp.org">https://cheatsheetseries.owasp.org</a></li><li>Redis <code>GETDEL</code> command docs</li><li>PostgreSQL <code>DELETE ... RETURNING</code> docs</li><li>MDN SubtleCrypto</li><li>NIST SP 800-38D (GCM)</li><li>RFC 9110 (HTTP semantics)</li><li>RFC 9106 (Argon2)</li><li>RFC 8018 (PKCS #5 / PBKDF2)</li></ul>
+</main></body></html>
