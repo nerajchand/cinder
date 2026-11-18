@@ -20,4 +20,3 @@ func TestUseMemory(t *testing.T) {
 		}
 	}
 }
-
