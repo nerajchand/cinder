@@ -49,6 +49,15 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - Plain JS frontend with no build step.
 - Dark mode is the default theme.
 - Secrets may contain markdown with a selectable code language; the link page shows a QR code.
+- Language lives inside the encrypted payload as a JSON envelope `{lang, text}`; the 64 KiB limit applies to the whole envelope.
+- Markdown is rendered with a sanitising DOM-construction renderer (no innerHTML); links limited to http/https/mailto with rel noopener noreferrer nofollow; images not rendered; copy copies raw source; preview uses the same pipeline.
+- Markdown parser, syntax highlighter and QR generator are vendored static files: no CDN, no inline styles.
+- QR is generated client-side only (never a third-party service) and hidden behind a Show QR button by default.
+- Buttons on the create and reveal screens are smaller.
+
+## 9. Recording decisions
+
+- Decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user for permission.
 
 ## Changelog
 
@@ -59,3 +68,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Rule added: always ask the user questions via the structured ask tool. Design docs merged to main. MVP decisions: server-assigned IDs (no AAD), no revoke in MVP, 64 KiB size limit, plain JS frontend with no build step.
 - 2026-11-18: UI mockups on branch docs/ui-mockups; dark mode is the default theme.
 - 2026-11-18: mockups revised after user review: markdown/code-language input, QR code on link page, smaller tombstone image
+- 2026-11-18: Rule added: decisions are recorded in docs/design.md and the AGENTS.md decisions log without asking the user. Recorded UI/content decisions (markdown envelope, sanitised rendering, vendored deps, client-side QR behind Show QR, dark default, smaller buttons).

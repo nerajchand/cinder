@@ -41,6 +41,19 @@ Recorded by the product owner on 2026-11-18. These supersede the recommendations
 - **Tombstones:** each tombstone is its own key with a TTL equal to the secret's **original remaining expiry**, so it disappears exactly when the secret would have expired.
 - **Separate service:** Redis runs alongside the Go binary, for example via `docker-compose` with the app and a Redis container. Self-hosters must run and secure Redis (no public exposure, authentication, private network).
 
+### UI and content decisions
+
+Recorded 2026-11-18. Recorded without asking, per the standing rule in `AGENTS.md`.
+
+| Area | Decision |
+|---|---|
+| Content format | Secrets may contain **markdown** with a **user-selectable code language** (plain text, markdown, JSON, YAML, Bash, Go, Python, JavaScript, SQL and others). The language lives **inside the encrypted payload** as a small JSON envelope `{lang, text}`. The **64 KiB limit applies to the whole envelope**. |
+| Rendering safety | Markdown is rendered with a **sanitising renderer using DOM construction, never `innerHTML`**. Links are limited to `http`, `https` and `mailto`, with `rel="noopener noreferrer nofollow"`. **Images are not rendered** (shown as plain text) to avoid remote loads. **Copy copies the raw source.** The **preview uses the same sanitised pipeline** as the reveal. |
+| Dependencies | The markdown parser, syntax highlighter and QR generator are **vendored static files**. No CDN, no inline styles. The highlighter uses CSS classes. |
+| QR code | The link-created page shows a QR code generated **client-side only**, never via a third-party service. It is **hidden behind a Show QR button by default**. The QR contains the full link including the key. |
+| Theme | **Dark mode is the default theme**, with an optional light toggle. |
+| Buttons | Buttons on the create and reveal screens are **smaller** (compact `sm` size, minimum height about 34px). Other screens keep the standard size. |
+
 ## Items to verify
 
 These claims come from memory and are **unverified**:

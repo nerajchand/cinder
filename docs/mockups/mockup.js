@@ -42,6 +42,13 @@
       n.focus(); n.click();
     });
   });
+  var qb = document.querySelector('[data-toggle-qr]');
+  if (qb) qb.addEventListener('click', function () {
+    var p = document.getElementById('qr-panel'), open = qb.getAttribute('aria-expanded') === 'true';
+    qb.setAttribute('aria-expanded', String(!open));
+    qb.textContent = open ? 'Show QR code' : 'Hide QR code';
+    p.hidden = open;
+  });
   var lang = document.getElementById('lang');
   var lb = document.getElementById('lang-badge');
   if (lang && lb) lang.addEventListener('change', function () { lb.textContent = lang.options[lang.selectedIndex].text; });

@@ -44,6 +44,8 @@ textarea:hover,select:hover,input:hover{border-color:var(--muted)}
 .btn.secondary{background:transparent;color:var(--text);border-color:var(--border)}
 .btn.secondary:hover{background:var(--surface2);border-color:var(--muted)}
 .btn.block{width:100%}
+.btn.sm{min-height:34px;padding:5px 12px;font-size:.9rem;gap:6px;border-radius:6px}
+.btn.sm svg{width:16px;height:16px}
 .btn-row{display:flex;gap:10px;flex-wrap:wrap}
 .alert{display:flex;gap:12px;padding:12px 14px;border-radius:8px;border:1px solid;margin:0 0 16px;font-size:.95rem}
 .alert svg{flex:none;width:20px;height:20px;margin-top:2px}
@@ -107,6 +109,8 @@ footer.site{text-align:center;color:var(--muted);font-size:.85rem;padding:16px}
 .rendered{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px;min-height:96px;margin:0 0 12px}
 .rendered[hidden]{display:none}
 .qr{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:20px;padding:16px;border:1px solid var(--border);border-radius:10px;background:var(--surface2)}
+.qr[hidden]{display:none}
+.qr-wrap .qr{margin-top:12px}
 .qr svg{width:152px;height:152px;flex:none;border-radius:6px;background:#fff}
 .qr p{margin:0 0 6px;flex:1 1 220px}
 .icon-hero.small{width:36px;height:36px;margin-bottom:12px}
