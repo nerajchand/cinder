@@ -108,3 +108,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Rule added (section 13): prefer polling over sleep.
 - 2026-11-18: Makefile docker targets added.
 - 2026-11-18: Logo mockups on branch docs/logo-mockups
+- 2026-11-18: Padlock-flame logo variants added
