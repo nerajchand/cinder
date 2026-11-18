@@ -90,6 +90,10 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - The coordinator uses the todo tool (`pi__todo`) for all tasks.
 - Create todos at the start of a task, mark one `in_progress` at a time, and mark each `completed` immediately when done.
 
+## 15. Showing markdown to the user
+
+- When the user should read a markdown document, open it with `mo --open <filename>` (not Chrome `open -a`, not raw paths).
+
 ## Changelog
 
 - 2026-11-18: Initial version.
@@ -122,3 +126,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Merged feat/dockerize and feat/api-usable to main (single Redis solution: deploy/redis.conf, no compose command flags); README reconciled with Dockerfile, healthcheck, compose hardening, CLI/curl docs, Makefile docker targets, CINDER_HOST_PORT and Redis bind note.
 - 2026-11-18: Rule added (section 14): use the todo tool for all tasks.
 - 2026-11-18: Web UI logo updated to padlock-ember-flame
+- 2026-11-18: Rule added (section 15): open markdown docs for the user with `mo --open <filename>`.
