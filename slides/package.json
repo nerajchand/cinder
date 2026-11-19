@@ -1,0 +1,15 @@
+{
+  "name": "cinder-workshop-slides",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Slidev deck for the 90-minute coordinator + subagents workshop (Cinder as the worked example)",
+  "scripts": {
+    "dev": "slidev --open",
+    "build": "slidev build",
+    "export": "slidev export"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.1.0",
+    "@slidev/theme-default": "latest"
+  }
+}

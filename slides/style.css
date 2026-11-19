@@ -1,0 +1,19 @@
+:root {
+  --ember: #ff7a1a;
+  --ember-light: #ffd27a;
+}
+.slidev-layout {
+  background: radial-gradient(ellipse at 85% 110%, rgba(255, 90, 20, 0.18), transparent 55%), #14100d;
+  color: #eadfd5;
+}
+.slidev-layout h1 { color: var(--ember); }
+.slidev-layout h2, .slidev-layout h3 { color: var(--ember-light); }
+.slidev-layout a { color: var(--ember-light); }
+.slidev-layout table th { color: var(--ember-light); }
+.slidev-layout blockquote { border-color: var(--ember); }
+.slidev-layout code { color: var(--ember-light); }
+.tag {
+  display: inline-block; padding: 0 .6em; border-radius: 999px;
+  border: 1px solid var(--ember); color: var(--ember); font-size: .7em;
+}
+.small { font-size: .8em; }
