@@ -111,7 +111,7 @@ A self-hosted tool to share secrets that **burn on read**.
 Your exercise uses `cinder-mini`: a small slice of this.
 
 <!--
-00:05 to 00:08 if time allows, otherwise skip to the sequence on the next slide at the demo. About 1 min.
+Optional, about 1 min. Not in the workshop-plan run sheet: show it on the projector while pairs finish the pre-flight (00:03 to 00:08), or skip it. Do not add it to the clock.
 Facts are from README.md and docs/design.md.
 -->
 
@@ -119,7 +119,7 @@ Facts are from README.md and docs/design.md.
 
 # Burn on read: the sequence
 
-```mermaid
+```mermaid {scale: 0.5}
 sequenceDiagram
     participant C as Creator browser
     participant S as Cinder server
@@ -138,15 +138,15 @@ sequenceDiagram
 ```
 
 <!--
-Use this as the shared vocabulary for the exercise: GET must never burn; consume is POST only.
-Source: README.md flow and API table.
+Optional, about 1 min, same rule as the previous slide (not on the run sheet; skip if late). Shared vocabulary for the exercise: GET must never burn; consume is POST only.
+These are Cinder's real paths (README.md flow and API table, docs/api.md). The cinder-mini starter uses shorter routes (/secrets), see the hands-on slides.
 -->
 
 ---
 
 # Concept 1: coordinator vs workers
 
-```mermaid
+```mermaid {scale: 0.75}
 flowchart LR
     H([Human]) <--> CO[Coordinator<br/>plans, delegates, reports]
     CO --> R[Researcher<br/>read only]
@@ -223,9 +223,11 @@ A worker knows nothing about your chat. Seven parts:
 
 Effort on line 1: planning **HIGH**, feature work **MEDIUM**, simple tasks and mockups **LOW**.
 
+<span class="small">Cinder's own history: the user said "feature work is low"; the recorded rule says MEDIUM. Never reconciled with the user. See Mishap 5.</span>
+
 <!--
 00:14 to 00:17 (3 min). The tool may have no effort setting, so write it in the prompt.
-Open question to be honest about: the user said "feature work is low" in chat; AGENTS.md says MEDIUM. We use MEDIUM. Lesson: read recorded rules back to the human.
+Open question to be honest about: the user said "feature work and mock is low" in chat (14:20); AGENTS.md section 10 says feature work is MEDIUM. The timeline could not find where that was agreed, and workshop-plan open question 9 is still open. The workshop uses MEDIUM (as the playbook does). Lesson: read recorded rules back to the human.
 -->
 
 ---
@@ -274,6 +276,8 @@ lsof -nP -iTCP:8080 -sTCP:LISTEN
 
 Task: **add a `/version` endpoint.** Todo list visible.
 
+<span class="small">Illustrative demo task from the workshop plan. Cinder has no `/version` endpoint; use any tiny task.</span>
+
 | Step | Min |
 |---|---:|
 | 1. Create worktree and branch | 1 |
@@ -315,6 +319,7 @@ Coordinator plan (HIGH effort), human replies "approved":
 # Demo 3: the delegation prompt
 
 ```text
+# Illustrative prompt for a demo repo (paths and files are made up)
 Effort: MEDIUM.
 CONTEXT   Repo /abs/path/demo. Read AGENTS.md first.
 TASK      Add GET /version. Owns: api/version.go. Out of scope: store.
@@ -344,7 +349,7 @@ Then run it yourself:
 ```bash
 gofmt -l . && go build ./... && go vet ./... && go test -race -count=1 ./...
 lsof -nP -iTCP:8080 -sTCP:LISTEN     # before and after
-curl -i http://127.0.0.1:8080/version
+curl -i http://127.0.0.1:8080/version   # illustrative demo route, not a Cinder API
 ```
 
 <!--
@@ -376,6 +381,8 @@ Conflict in the `AGENTS.md` changelog? **Keep every line.** Remove only the mark
 # Hands-on: the brief (cinder-mini)
 
 A tiny burn-on-read store. Go standard library, about 150 lines. No encryption, Redis or Docker.
+
+<span class="small">The starter repo is planned, not built yet. Task names and done checks come from the workshop plan.</span>
 
 | Task | Branch | Done when |
 |---|---|---|
@@ -434,7 +441,7 @@ Walk the room. A facilitator checks every plan. This and verification are the tw
 
 # Delegate and watch (00:50 to 01:05)
 
-```mermaid
+```mermaid {scale: 0.6}
 flowchart TB
     CO[Coordinator<br/>you, with todo list] --> P1[prompt: store]
     CO --> P2[prompt: api]
@@ -480,6 +487,7 @@ Pairs switch driver/navigator here. Order: merge what others depend on first.
 # Run and check (01:15 to 01:20)
 
 ```bash
+# cinder-mini starter routes. Real Cinder uses /api/secrets and `go run ./cmd/cinder`
 lsof -nP -iTCP:8080 -sTCP:LISTEN          # who owns the port?
 go run . &                                  # note the pid
 curl -s -X POST http://127.0.0.1:8080/secrets -d '...'      # returns id
@@ -491,7 +499,7 @@ kill <pid>; lsof -nP -iTCP:8080 -sTCP:LISTEN                # prints nothing
 Paste the output. **Stop your server** is part of done.
 
 <!--
-Paths and request bodies depend on the starter repo; adjust to match cinder-mini before the day.
+Illustrative: the starter repo does not exist yet (workshop-plan open question 3). Paths (plan: POST /secrets, GET /secrets/{id}/status, POST /secrets/{id}/consume) and request bodies must be adjusted to the real cinder-mini before the day. Cinder itself uses /api/secrets and needs an Origin header on consume.
 Shared machine: give each pair a port (PORT=8081, ...).
 -->
 
@@ -533,6 +541,7 @@ flowchart LR
 <!--
 SECTION 5: Debrief. 01:20 to 01:30 (10 min).
 01:20 each pair names one unchecked claim. Reveal the solution branch. 01:27 feedback form (3 questions). 01:30 end.
+Time budget: the run sheet gives 7 minutes (01:20 to 01:27) before feedback, so pick 2 or 3 mishap slides, not all five. The plan does not list these slides explicitly; this is a suggestion.
 This diagram is from docs/workshop/timeline.md. User asks were real; build ran 2026-11-18 13:43 to 15:48 (UTC+11).
 -->
 
@@ -544,7 +553,8 @@ This diagram is from docs/workshop/timeline.md. User asks were real; build ran 2
 - Later, Docker was rebuilt and healthy. But `localhost:8080/static/logo.svg` gave 404.
 - `localhost` resolved to `::1` first. The old process listened on `*:8080` over IPv6, so the browser hit it, not Docker.
 - `127.0.0.1:8080` served the correct logo from the container.
-- Killed the old PIDs. `lsof` then showed only Docker.
+- Killed the old PIDs. `lsof` then showed only Docker, and `/static/logo.svg` returned 200.
+- This is the agents' finding. The user's own browser check was not recorded.
 
 **Lesson:** check what listens on the port before and after you test. Stop dev servers.
 
@@ -605,12 +615,12 @@ Hash 414b729 is on main (verified with git log).
 # Mishap 5: the coordinator broke its own rule
 
 - `AGENTS.md` section 14: use the todo tool for all tasks.
-- The coordinator skipped it in **three tasks** in the logo phase, saying the task was small.
-- Also: stray worktree paths, and a rule that drifted ("feature work low" vs MEDIUM).
+- The coordinator skipped it in **three tasks** in the old-logo debugging phase, and said so in each report. One reason it gave: the task was small.
+- Also: stray worktree paths, and a rule that drifted ("feature work low" vs MEDIUM, still not settled with the user).
 
 **Lessons**
 
-- A rule that is optional "for small tasks" is not followed. Keep rules small enough to always follow, or drop them.
+- A rule that is optional "for small tasks" tends not to be followed. Keep rules small enough to always follow, or drop them.
 - Add a rule only when something goes wrong.
 - Read new rules back to the human once.
 
@@ -690,6 +700,8 @@ Thank you.
 
 # Backup: failure modes
 
+<div class="text-sm">
+
 | Problem | What to do |
 |---|---|
 | Stale process on 8080 | `lsof -nP -iTCP:8080 -sTCP:LISTEN`; stop it; use `127.0.0.1` |
@@ -699,6 +711,8 @@ Thank you.
 | Two agents, same file | Stop one; freeze shared piece; one owner |
 | Agent merges or pushes | "Do not push, do not merge" in every prompt; check `git log`, `git remote -v` |
 | Wrong worktree place | Absolute path; `git worktree list` |
+
+</div>
 
 <!--
 Backup slide. Use as needed during the hands-on block.

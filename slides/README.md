@@ -2,7 +2,7 @@
 
 Slidev deck for the 90-minute workshop "build an app with a coordinator agent and subagents", using Cinder as the worked example. It follows `docs/workshop/workshop-plan.md` (8 + 12 + 15 + 45 + 10 minutes) and the facts in `docs/workshop/timeline.md`. Facilitator timing and cues are in the speaker notes of each slide.
 
-This folder is outside the Go build. It adds nothing to `go.mod`. Node 18+ is needed (built here with Node 26 and npm 11).
+This folder is outside the Go build. It adds nothing to `go.mod`. Node 22.22 or newer is needed (the installed `@slidev/cli` 53.1.0 declares `engines.node >=22.22.0`). Built and checked here with Node 26.13 and npm 11.20.
 
 ## Run
 

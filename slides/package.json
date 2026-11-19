@@ -8,8 +8,11 @@
     "build": "slidev build",
     "export": "slidev export"
   },
+  "engines": {
+    "node": ">=22.22.0"
+  },
   "devDependencies": {
     "@slidev/cli": "^53.1.0",
-    "@slidev/theme-default": "latest"
+    "@slidev/theme-default": "^0.25.0"
   }
 }
