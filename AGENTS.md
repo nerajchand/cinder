@@ -128,3 +128,4 @@ Design decisions live in `docs/design.md`. MVP decisions:
 - 2026-11-18: Web UI logo updated to padlock-ember-flame
 - 2026-11-18: Rule added (section 15): open markdown docs for the user with `mo --open <filename>`.
 - 2026-11-18: web-logo-fix: root cause was a stale Docker image (served old inline-SVG header, /static/logo.svg 404); source logo files were byte-identical to 09. Header logo enlarged to 36px and light-theme drop-shadow filter removed. Run `make docker-up` to rebuild.
+- 2026-11-19: Workshop docs added in docs/workshop/ (timeline, workshop plan, playbook, README index).
