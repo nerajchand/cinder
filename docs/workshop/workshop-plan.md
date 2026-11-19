@@ -70,6 +70,33 @@ Expected: the build passes, and the tests fail only in the three packages the ex
 | 45 | 00:35 to 01:20 | Hands-on in pairs | Plan, delegate, verify, merge (see section 5 for the sub-schedule). |
 | 10 | 01:20 to 01:30 | Debrief | Share results, compare with the solution, collect lessons, handouts. |
 
+### Minute-by-minute run sheet
+
+| Clock | Facilitator does |
+|---|---|
+| 00:00 | Welcome. State goals and the rule: "Show me the command you ran." |
+| 00:03 | Form pairs. Pairs run the pre-flight check. |
+| 00:08 | Concept 1: coordinator vs workers. |
+| 00:10 | Concept 2: worktrees. |
+| 00:12 | Concept 3: plan first. |
+| 00:14 | Concept 4: delegation prompts and effort levels (3 min). |
+| 00:17 | Concept 5: merge policy. |
+| 00:19 | Concept 6: trust but verify. |
+| 00:20 | Demo: worktree and branch. |
+| 00:21 | Demo: plan and approval. |
+| 00:24 | Demo: delegation prompt. |
+| 00:27 | Demo: read the report, find one unchecked item. |
+| 00:30 | Demo: verification checklist. |
+| 00:33 | Demo: merge and clean up. |
+| 00:35 | Exercise starts: read the brief, make the todo list. |
+| 00:40 | Plan gate. Walk the room and check each plan. |
+| 00:50 | Pairs delegate and start the workers. Call time every 5 minutes. |
+| 01:05 | Verify and merge. |
+| 01:15 | Run and check with `curl`. Check port 8080. |
+| 01:20 | Debrief: each pair names one unchecked claim. Reveal the `solution` branch. |
+| 01:27 | Feedback form (3 questions). |
+| 01:30 | End. |
+
 ### Concepts (12 minutes)
 
 1. **Coordinator vs workers (2 min).** The coordinator plans, delegates, reports and talks to the human. Workers research, build and review. The coordinator never edits code. Reason: it keeps the plan and the work separate, so the human can check each one.
@@ -225,6 +252,27 @@ If you have extra time (up to 10 minutes): run the stretch review task, or compa
 6. Exercise brief: the three tasks and the done criteria (section 5).
 7. Failure modes table (section 7).
 8. Feedback form (3 questions).
+
+## 12a. Repeatable-run checklist
+
+Use this for each new run of the workshop.
+
+Before (one week):
+- [ ] Starter repo cloned fresh and tagged `start`; `solution` branch tested with `go test -race ./...`.
+- [ ] Pre-flight commands run on a clean laptop.
+- [ ] `AGENTS.md` template matches the current [playbook.md](playbook.md).
+- [ ] Participants have the prerequisites email.
+- [ ] Spare laptop and offline copy of the repo ready.
+
+On the day:
+- [ ] Port 8080 free on the facilitator laptop.
+- [ ] Demo rehearsed within the last 24 hours.
+- [ ] Clock visible. Handouts ready.
+
+After:
+- [ ] Collect the feedback forms and note timings that ran over.
+- [ ] Update this plan and the playbook. Add one dated line to the `AGENTS.md` Changelog of the starter repo.
+- [ ] Remove worktrees and branches from the facilitator machine (`git worktree list`).
 
 ## 13. Open questions for the user
 

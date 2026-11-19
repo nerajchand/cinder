@@ -66,7 +66,7 @@ flowchart LR
 | When | User ask | What the coordinator delegated | Result | Notes |
 |---|---|---|---|---|
 | 14:23 | "Lets build it" | `scaffold` agent (T0), then five agents in parallel, each in its own worktree: `store`, `middleware`, `api`, `web`, `deploy`. | **scaffold** (14:24:40): `3e09369`, `528d8bd`, `ce174d5`, `d214b12`, `7ac7fb9`, `b01e253`, `86c27c2`. Go module, frozen `Store` interface, `internal/config`, `internal/idgen`, `docs/api.md`, CI. | The coordinator froze the `Store` interface first so the others could build against it. |
-| about 14:25 | (Not stated.) | An agent renamed tasks. | `12a6eb5` docs: name tasks instead of T0-T7. `AGENTS.md` section 11 maps names. | Short names (`scaffold`, `store`, ...) replaced T0-T7. The design docs may still say T0-T7 (unverified). |
+| about 14:25 | (Not stated.) | An agent renamed tasks. | `12a6eb5` docs: name tasks instead of T0-T7. `AGENTS.md` section 11 maps names. | Short names (`scaffold`, `store`, ...) replaced T0-T7. `docs/api.md` still says "frozen by T0". |
 | 14:28 to 14:35 | (Same ask.) | See rows above. | **store:** `7b5678f`, `c59e916`, `ab85bee`, `a66f69a` (Redis with Lua, memory store, tests). **middleware:** `6c44b43`, `a4b5a6e`, `08576f6`, `87ae9cb` (headers, rate limit, body limit, logging, origin). **api:** `ad1aa74`, `50ce206`. **web:** `914154a`, `ec53413`, `e435599`, `401de37`, `cc72039` (crypto, sanitising markdown, vendored QR). **deploy:** `38fbea4`, `f42c0a6`, `092f145` (Dockerfile, compose, ops guide, first README). | Plain JS, no build step. Agents reported 26 `node --test` tests passing for `web`. |
 | 14:26 and 14:27 | "merge without asking me if it's ready and passes tests", then "Do it all". | A merge agent merged each ready branch (fast-forward, or rebase then fast-forward). | `e273c51` docs: AGENTS.md merge policy and changelog. `AGENTS.md` section 12. | Every branch added a line to the `AGENTS.md` Changelog, so rebases conflicted there. The merge agent kept all lines. I could not tell from the transcripts what "Do it all" answered. |
 | 14:37 to 14:39 | (Part of "Do it all".) | `harden` agent (integration). | `9d547bf` wire Redis store, web UI and middleware via `internal/app`; `23e8c36` gofmt; `e7e960d` full-stack integration, CSP and healthz tests. | The coordinator summary says the Redis tests were not run on the last merge run. |
@@ -110,6 +110,12 @@ Five asks were handled in parallel, each on its own branch and worktree. Exact a
 | 15:36 | "run the make docker down/up again" | Developer agent (low effort): `make docker-down`, `make docker-up`, poll until healthy, then curl. | Both services healthy. `/healthz` returned 200. `localhost:8080/static/logo.svg` returned 404. | A second agent found a stale `go run` process (PID 47567, started 14:43) still listening on `*:8080` over IPv6. `localhost` resolved to `::1` first, so the browser reached the old process, not Docker. `127.0.0.1:8080` served the correct logo from the container. |
 | 15:48 | "the logo in the page still is the old one. not the new one '09' ... The readme is fine though" | Agent killed the stale process. | PIDs 47567 and 47510 killed. `lsof` then showed only Docker on port 8080. `/static/logo.svg` returned 200. | Nobody looked at the page in a browser. The user's own check is the real confirmation (not recorded here). |
 
+## Phase 9: Workshop docs (2026-11-19, about 11:00 to 11:15)
+
+| When | User ask | What the coordinator delegated | Result | Notes |
+|---|---|---|---|---|
+| about 11:00 | A timeline of what was asked and what it produced; a plan to turn this into a 90-minute training workshop; a repeatable process other humans can follow. | Workers on branch `docs/workshop` (worktree `Cinder-worktrees/workshop-docs`), then a finish worker. | `docs/workshop/`: `timeline.md`, `workshop-plan.md`, `playbook.md`, `README.md`. | The ask time is approximate. The finish worker checked hashes against `git log` and fixed the docs; it did not rerun the app. |
+
 ## What went wrong, and lessons
 
 1. **A stale process hid the real result.** The first dev server stayed alive on port 8080 for about an hour. Docker was fine. Two agents noticed port 8080 was busy and left it alone, but nobody told the user. Lesson: before you test a service, check what listens on the port (`lsof -nP -iTCP:8080 -sTCP:LISTEN`). Stop dev servers when the task ends.
@@ -131,5 +137,6 @@ Five asks were handled in parallel, each on its own branch and worktree. Exact a
 - Docker image on non-native architectures; image size; vulnerability scan.
 - CI against the Go 1.26 change. CI runs `go vet` and `go test` only (no Node tests, no Redis service).
 - Browsers other than Chrome.
-- Whether the design docs still mention T0-T7.
+- Design docs still use the old task names: `docs/api.md` line 1 says "frozen by T0" (checked). Other docs were not searched.
+- The `AGENTS.md` Changelog line for `web-logo-fix` still names "stale Docker image" as the root cause. It has not been corrected (checked at 2026-11-19). The real cause is in Phase 8.
 - The exact time of the Phase 6 and Phase 7 user asks.
